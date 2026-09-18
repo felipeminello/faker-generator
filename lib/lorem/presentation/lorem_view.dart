@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../shared/presentation/copy_to_clipboard.dart';
+import '../../shared/presentation/generator_actions.dart';
+import '../../shared/presentation/responsive.dart';
 import '../data/lorem_model.dart';
 import '../data/lorem_unit.dart';
 
@@ -50,7 +51,7 @@ class LoremView extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -69,9 +70,11 @@ class LoremView extends StatelessWidget {
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            'Lorem Ipsum',
-                            style: theme.textTheme.headlineSmall,
+                          Expanded(
+                            child: Text(
+                              'Lorem Ipsum',
+                              style: theme.textTheme.headlineSmall,
+                            ),
                           ),
                         ],
                       ),
@@ -109,30 +112,10 @@ class LoremView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: onGenerate,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(text == null ? 'Gerar' : 'Gerar novo'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: text == null
-                        ? null
-                        : () => copyToClipboard(context, text),
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copiar'),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.outlined(
-                    onPressed: text == null ? null : onClear,
-                    tooltip: 'Limpar',
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+              GeneratorActions(
+                value: text,
+                onGenerate: onGenerate,
+                onClear: onClear,
               ),
             ],
           ),
@@ -175,7 +158,10 @@ class _Options extends StatelessWidget {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact(context) ? 12 : 20,
+          vertical: 16,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

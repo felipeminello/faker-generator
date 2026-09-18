@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'copy_to_clipboard.dart';
+import 'generator_actions.dart';
+import 'responsive.dart';
 
 /// Reusable presentation widget shared by every generator feature
 /// (UUID, CPF, CNPJ).
@@ -43,13 +44,12 @@ class GeneratorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasValue = value != null;
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: pagePadding(context),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +58,9 @@ class GeneratorView extends StatelessWidget {
                 children: [
                   Icon(icon, size: 32, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
-                  Text(title, style: theme.textTheme.headlineSmall),
+                  Expanded(
+                    child: Text(title, style: theme.textTheme.headlineSmall),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -71,30 +73,11 @@ class GeneratorView extends StatelessWidget {
               const SizedBox(height: 24),
               _ResultCard(value: value),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: onGenerate,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(hasValue ? 'Gerar novo' : generateLabel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: hasValue
-                        ? () => copyToClipboard(context, value!)
-                        : null,
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copiar'),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.outlined(
-                    onPressed: hasValue ? onClear : null,
-                    tooltip: 'Limpar',
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+              GeneratorActions(
+                value: value,
+                onGenerate: onGenerate,
+                onClear: onClear,
+                generateLabel: generateLabel,
               ),
             ],
           ),
@@ -113,10 +96,21 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final compact = isCompact(context);
+    final valueStyle =
+        (compact ? theme.textTheme.titleMedium : theme.textTheme.headlineSmall)
+            ?.copyWith(
+              fontFamily: 'monospace',
+              fontFeatures: const [FontFeature.tabularFigures()],
+            );
+
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 96),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 16 : 24,
+        vertical: compact ? 20 : 28,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
@@ -126,16 +120,19 @@ class _ResultCard extends StatelessWidget {
         child: value == null
             ? Text(
                 'Nenhum valor gerado ainda',
+                textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               )
-            : SelectableText(
-                value!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontFamily: 'monospace',
-                  fontFeatures: const [FontFeature.tabularFigures()],
+            // A UUID is 36 characters wide: on a phone it would overflow the
+            // card, so the text shrinks instead of wrapping mid-value.
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: SelectableText(
+                  value!,
+                  textAlign: TextAlign.center,
+                  style: valueStyle,
                 ),
               ),
       ),

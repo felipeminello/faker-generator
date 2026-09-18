@@ -20,7 +20,17 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   an option regenerates the text on the spot.
 
 Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
-**Limpar** actions. Navigation between features uses a `NavigationRail`.
+**Limpar** actions.
+
+The layout is responsive, with a single breakpoint at 600 logical pixels
+(`lib/shared/presentation/responsive.dart`):
+
+| | Wide (desktop, tablet) | Compact (phone) |
+| --- | --- | --- |
+| Navigation | `NavigationRail` on the side | `NavigationBar` at the bottom |
+| Page padding | 32 | 16 |
+| Actions | the three buttons share one row | **Gerar** takes a full-width row of its own, with **Copiar** + **Limpar** below it |
+| Generated value | `headlineSmall` | `titleMedium`, scaled down to fit a 36-character UUID |
 
 ## Architecture
 
@@ -35,10 +45,12 @@ lib/
 ├── main.dart                      # MultiRepositoryProvider + MultiBlocProvider, MaterialApp
 ├── home/
 │   └── presentation/
-│       └── home_page.dart         # NavigationRail shell switching between features
+│       └── home_page.dart         # Shell: rail on desktop, bottom bar on phones
 ├── shared/
 │   └── presentation/
 │       ├── generator_view.dart    # Reusable result card + generate/copy/clear UI
+│       ├── generator_actions.dart # Gerar/Copiar/Limpar bar, stacked when compact
+│       ├── responsive.dart        # Compact breakpoint + page padding helpers
 │       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar
 ├── uuid/
 │   ├── bloc/                      # UuidBloc, UuidEvent, UuidState
@@ -98,7 +110,7 @@ tool/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell + UUID and Lorem page widget tests
+├── widget_test.dart               # App shell, UUID/Lorem pages, phone-sized layout
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
 ├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests

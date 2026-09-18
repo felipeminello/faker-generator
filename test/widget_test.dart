@@ -83,4 +83,87 @@ void main() {
       findsOneWidget,
     );
   });
+
+  group('phone-sized window', () {
+    // Roughly an iPhone 15 in logical pixels.
+    setUp(() => _setSurface(const Size(393, 852)));
+
+    testWidgets('uses a bottom bar instead of the side rail', (tester) async {
+      await tester.pumpWidget(const MyApp());
+
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(NavigationRail), findsNothing);
+    });
+
+    testWidgets('navigates from the bottom bar', (tester) async {
+      await tester.pumpWidget(const MyApp());
+
+      await tester.tap(find.text('CPF'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Cadastro de Pessoa Física válido, com dígitos '
+          'verificadores.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('lays out every page without overflowing', (tester) async {
+      await tester.pumpWidget(const MyApp());
+
+      for (final tab in ['UUID v4', 'CPF', 'CNPJ', 'Lorem']) {
+        await tester.tap(find.text(tab).last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Gerar'));
+        await tester.pumpAndSettle();
+        // pumpAndSettle rethrows the overflow assertion raised by a Row or
+        // Column that does not fit, so reaching here means the page fits.
+      }
+    });
+
+    testWidgets('the generate button keeps a single-line label', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MyApp());
+      await tester.tap(find.text('Gerar'));
+      await tester.pumpAndSettle();
+
+      // "Gerar novo" is the longest label, and the one that used to collapse
+      // into a column of single letters when the three actions shared a Row.
+      final label = find.descendant(
+        of: find.byType(FilledButton),
+        matching: find.text('Gerar novo'),
+      );
+      final size = tester.getSize(label);
+
+      expect(size.height, lessThan(32), reason: 'the label must not wrap');
+      expect(size.width, greaterThan(size.height));
+    });
+
+    testWidgets('fits the narrowest phone still in use', (tester) async {
+      // iPhone SE (1st gen) width: the tightest layout the app has to survive.
+      _setSurface(const Size(320, 568));
+      await tester.pumpWidget(const MyApp());
+      await tester.tap(find.text('Gerar'));
+      await tester.pumpAndSettle();
+
+      final label = find.descendant(
+        of: find.byType(FilledButton),
+        matching: find.text('Gerar novo'),
+      );
+      expect(tester.getSize(label).height, lessThan(32));
+    });
+  });
+}
+
+/// Pins the test window to [size] for the duration of the test.
+void _setSurface(Size size) {
+  final view =
+      TestWidgetsFlutterBinding.instance.platformDispatcher.implicitView!;
+  view.devicePixelRatio = 1;
+  view.physicalSize = size;
+  addTearDown(view.resetPhysicalSize);
+  addTearDown(view.resetDevicePixelRatio);
 }
