@@ -37,6 +37,38 @@ void main() {
     expect(find.text('Nenhum valor gerado ainda'), findsOneWidget);
   });
 
+  testWidgets('generates placeholder text on the Lorem Ipsum page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Lorem'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum texto gerado ainda'), findsOneWidget);
+
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum texto gerado ainda'), findsNothing);
+    final generated = tester.widget<SelectableText>(
+      find.byType(SelectableText),
+    );
+    expect(generated.data, startsWith('Lorem ipsum dolor sit amet'));
+  });
+
+  testWidgets('switching the Lorem unit resets the amount', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Lorem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Palavras'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quantidade de palavras'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '50'), findsOneWidget);
+  });
+
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -44,8 +76,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Cadastro Nacional da Pessoa Jurídica válido, com dígitos '
-          'verificadores.'),
+      find.text(
+        'Cadastro Nacional da Pessoa Jurídica válido, com dígitos '
+        'verificadores.',
+      ),
       findsOneWidget,
     );
   });

@@ -6,6 +6,8 @@ import 'cnpj/data/cnpj_repository.dart';
 import 'cpf/bloc/cpf_bloc.dart';
 import 'cpf/data/cpf_repository.dart';
 import 'home/presentation/home_page.dart';
+import 'lorem/bloc/lorem_bloc.dart';
+import 'lorem/data/lorem_repository.dart';
 import 'uuid/bloc/uuid_bloc.dart';
 import 'uuid/data/uuid_repository.dart';
 
@@ -23,6 +25,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => UuidRepository()),
         RepositoryProvider(create: (_) => CpfRepository()),
         RepositoryProvider(create: (_) => CnpjRepository()),
+        RepositoryProvider(create: (_) => LoremRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -34,6 +37,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => CnpjBloc(context.read<CnpjRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => LoremBloc(context.read<LoremRepository>()),
           ),
         ],
         child: MaterialApp(

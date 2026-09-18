@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../cnpj/presentation/cnpj_page.dart';
 import '../../cpf/presentation/cpf_page.dart';
+import '../../lorem/presentation/lorem_page.dart';
 import '../../uuid/presentation/uuid_page.dart';
 
-/// Root page hosting a [NavigationRail] that switches between the three
-/// generator features.
+/// Root page hosting a [NavigationRail] that switches between the generator
+/// features.
 ///
 /// Only the selected page is built; each feature's Bloc lives above [HomePage]
 /// (provided in `main.dart`), so generated values survive tab switches.
@@ -23,6 +24,7 @@ class _HomePageState extends State<HomePage> {
     UuidPage(),
     CpfPage(),
     CnpjPage(),
+    LoremPage(),
   ];
 
   static const _destinations = <NavigationRailDestination>[
@@ -40,6 +42,11 @@ class _HomePageState extends State<HomePage> {
       icon: Icon(Icons.business_outlined),
       selectedIcon: Icon(Icons.business),
       label: Text('CNPJ'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.article_outlined),
+      selectedIcon: Icon(Icons.article),
+      label: Text('Lorem'),
     ),
   ];
 

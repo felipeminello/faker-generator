@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'copy_to_clipboard.dart';
 
 /// Reusable presentation widget shared by every generator feature
 /// (UUID, CPF, CNPJ).
@@ -63,8 +64,9 @@ class GeneratorView extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 description,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 24),
               _ResultCard(value: value),
@@ -81,7 +83,7 @@ class GeneratorView extends StatelessWidget {
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: hasValue
-                        ? () => _copyToClipboard(context, value!)
+                        ? () => copyToClipboard(context, value!)
                         : null,
                     icon: const Icon(Icons.copy),
                     label: const Text('Copiar'),
@@ -99,19 +101,6 @@ class GeneratorView extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _copyToClipboard(BuildContext context, String text) async {
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Copiado para a área de transferência'),
-          duration: Duration(seconds: 2),
-        ),
-      );
   }
 }
 
@@ -137,8 +126,9 @@ class _ResultCard extends StatelessWidget {
         child: value == null
             ? Text(
                 'Nenhum valor gerado ainda',
-                style: theme.textTheme.bodyLarge
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               )
             : SelectableText(
                 value!,

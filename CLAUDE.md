@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values.
+This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values, plus Lorem Ipsum placeholder text.
 
 **Windows, macOS, Linux, Android, and iOS** runner directories are configured (see `.metadata`); there is no `web/`. Add it with `flutter create --platforms=web .` before targeting it. Development happens on Windows, so `flutter run` defaults to `-d windows`.
 
@@ -30,6 +30,7 @@ This project **must follow the BLoC (Business Logic Component) pattern** for sta
 - Use the `flutter_bloc` package (`BlocProvider`, `BlocBuilder`, `BlocListener`, `context.read`/`context.watch`).
 - Suggested layering: `presentation` (widgets) → `bloc` (blocs/cubits, events, states) → `domain`/`data` (repositories, models). Widgets never call repositories directly; the Bloc mediates.
 - The UUID feature lives under [lib/uuid/](lib/uuid/), split into `presentation/` (`UuidPage` + view widgets), `bloc/` (`UuidBloc` with `UuidEvent`/`UuidState`), and `data/` (`UuidRepository`, `UuidModel`). [lib/main.dart](lib/main.dart) wires them together with `RepositoryProvider` + `BlocProvider`. New features should follow the same layering.
+- CPF, CNPJ, and Lorem Ipsum ([lib/lorem/](lib/lorem/)) follow the same layout. Lorem Ipsum is the configurable one: its options (unit, amount, opening sentence) live in a single `LoremState`, not in the widgets.
 
 ## Commands
 

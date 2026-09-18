@@ -1,8 +1,8 @@
 # Fake Generator
 
-A Flutter app that generates **UUID v4**, **CPF**, and **CNPJ** values, with
-one-click copy to the clipboard. CPF and CNPJ are generated with valid check
-digits.
+A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, and **Lorem Ipsum**
+placeholder text, with one-click copy to the clipboard. CPF and CNPJ are
+generated with valid check digits.
 
 Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
@@ -13,6 +13,11 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 - **CPF** — valid Cadastro de Pessoa Física numbers, formatted `XXX.XXX.XXX-XX`.
 - **CNPJ** — valid Cadastro Nacional da Pessoa Jurídica numbers, formatted
   `XX.XXX.XXX/XXXX-XX` (head-office branch `0001`).
+- **Lorem Ipsum** — placeholder text in the spirit of [lipsum.com](https://lipsum.com/).
+  Pick the unit (**parágrafos**, **palavras**, **letras** or **listas**), the
+  amount, and whether the text opens with the classic
+  "Lorem ipsum dolor sit amet...". Word and letter amounts are exact; changing
+  an option regenerates the text on the spot.
 
 Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
 **Limpar** actions. Navigation between features uses a `NavigationRail`.
@@ -33,7 +38,8 @@ lib/
 │       └── home_page.dart         # NavigationRail shell switching between features
 ├── shared/
 │   └── presentation/
-│       └── generator_view.dart    # Reusable result card + generate/copy/clear UI
+│       ├── generator_view.dart    # Reusable result card + generate/copy/clear UI
+│       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar
 ├── uuid/
 │   ├── bloc/                      # UuidBloc, UuidEvent, UuidState
 │   │   ├── uuid_bloc.dart
@@ -54,16 +60,28 @@ lib/
 │   │   └── cpf_repository.dart
 │   └── presentation/
 │       └── cpf_page.dart
-└── cnpj/
-    ├── bloc/                      # CnpjBloc, CnpjEvent, CnpjState
-    │   ├── cnpj_bloc.dart
-    │   ├── cnpj_event.dart
-    │   └── cnpj_state.dart
+├── cnpj/
+│   ├── bloc/                      # CnpjBloc, CnpjEvent, CnpjState
+│   │   ├── cnpj_bloc.dart
+│   │   ├── cnpj_event.dart
+│   │   └── cnpj_state.dart
+│   ├── data/
+│   │   ├── cnpj_model.dart
+│   │   └── cnpj_repository.dart
+│   └── presentation/
+│       └── cnpj_page.dart
+└── lorem/
+    ├── bloc/                      # LoremBloc, LoremEvent, LoremState
+    │   ├── lorem_bloc.dart
+    │   ├── lorem_event.dart
+    │   └── lorem_state.dart
     ├── data/
-    │   ├── cnpj_model.dart
-    │   └── cnpj_repository.dart
+    │   ├── lorem_model.dart
+    │   ├── lorem_repository.dart
+    │   └── lorem_unit.dart        # Unit enum (parágrafos/palavras/letras/listas) + ranges
     └── presentation/
-        └── cnpj_page.dart
+        ├── lorem_page.dart        # Bloc wiring
+        └── lorem_view.dart        # Options + result UI
 
 assets/
 └── icon/                          # Icon sources (generated, see "App icon")
@@ -80,10 +98,11 @@ tool/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell + UUID page widget tests
+├── widget_test.dart               # App shell + UUID and Lorem page widget tests
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
-└── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
+├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
+└── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```
