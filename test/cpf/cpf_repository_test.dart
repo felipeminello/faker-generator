@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/cpf/data/cpf_repository.dart';
+import 'package:fake_generator/cpf/data/cpf_repository.dart';
 
 /// Validates a raw 11-digit CPF by recomputing its two check digits.
 bool isValidCpf(String digits) {

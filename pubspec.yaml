@@ -1,5 +1,5 @@
-name: uuid_generator
-description: "A new Flutter project."
+name: fake_generator
+description: "Gerador de dados fake: UUID v4, CPF e CNPJ."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -47,6 +47,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   bloc_test: ^10.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -58,6 +59,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # O ícone do app também é empacotado como asset: o runner do Linux o usa em
+  # tempo de execução para definir o ícone da janela (veja
+  # linux/runner/my_application.cc).
+  assets:
+    - assets/icon/app_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -89,3 +96,38 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Ícones de launcher por plataforma.
+#
+# As imagens-fonte em `assets/icon/` são geradas por `python tool/generate_icon.py`.
+# Depois de regerá-las (ou de editar esta seção), aplique com:
+#
+#   dart run flutter_launcher_icons
+#
+# Isso reescreve os ícones nativos de android/, ios/, macos/ e windows/.
+# O Linux não é suportado pelo flutter_launcher_icons: lá o ícone da janela é
+# definido em tempo de execução em linux/runner/my_application.cc, e o
+# empacotamento usa linux/packaging/.
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+
+  android: true
+  min_sdk_android: 21
+  adaptive_icon_background: "assets/icon/app_icon_background.png"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/app_icon_monochrome.png"
+
+  ios: true
+  # O iOS não aceita transparência e aplica a própria máscara de cantos, então a
+  # fonte é quadrada e opaca.
+  image_path_ios: "assets/icon/app_icon_ios.png"
+  remove_alpha_ios: true
+
+  macos:
+    generate: true
+    # Segue a grade da Apple: corpo do ícone em 824px de uma tela de 1024px.
+    image_path: "assets/icon/app_icon_macos.png"
+
+  # Windows fica de fora de propósito: o flutter_launcher_icons grava um .ico com
+  # um único quadro de 256px, e `tool/generate_icon.py` grava
+  # windows/runner/resources/app_icon.ico já com os tamanhos 16..256 embutidos.

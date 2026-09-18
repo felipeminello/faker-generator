@@ -1,8 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/cnpj/bloc/cnpj_bloc.dart';
-import 'package:uuid_generator/cnpj/data/cnpj_model.dart';
-import 'package:uuid_generator/cnpj/data/cnpj_repository.dart';
+import 'package:fake_generator/cnpj/bloc/cnpj_bloc.dart';
+import 'package:fake_generator/cnpj/data/cnpj_model.dart';
+import 'package:fake_generator/cnpj/data/cnpj_repository.dart';
 
 class _FakeCnpjRepository implements CnpjRepository {
   @override

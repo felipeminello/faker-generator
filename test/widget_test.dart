@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/main.dart';
+import 'package:fake_generator/main.dart';
 
 void main() {
   testWidgets('starts on the UUID page in the empty state', (tester) async {

@@ -1,8 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/uuid/bloc/uuid_bloc.dart';
-import 'package:uuid_generator/uuid/data/uuid_model.dart';
-import 'package:uuid_generator/uuid/data/uuid_repository.dart';
+import 'package:fake_generator/uuid/bloc/uuid_bloc.dart';
+import 'package:fake_generator/uuid/data/uuid_model.dart';
+import 'package:fake_generator/uuid/data/uuid_repository.dart';
 
 class _FakeUuidRepository implements UuidRepository {
   var _counter = 0;

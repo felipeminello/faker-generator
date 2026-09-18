@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Fake Generator
+Comment=Gerador de dados fake: UUID v4, CPF e CNPJ
+Exec=fake_generator
+Icon=br.dev.minello.fake_generator
+Terminal=false
+Categories=Development;Utility;
+Keywords=uuid;cpf;cnpj;gerador;fake;
+StartupWMClass=br.dev.minello.fake_generator

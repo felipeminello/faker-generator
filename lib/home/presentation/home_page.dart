@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gerador de UUID, CPF e CNPJ')),
+      appBar: AppBar(title: const Text('Fake Generator')),
       body: Row(
         children: [
           NavigationRail(

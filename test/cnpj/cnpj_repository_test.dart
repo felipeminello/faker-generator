@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/cnpj/data/cnpj_repository.dart';
+import 'package:fake_generator/cnpj/data/cnpj_repository.dart';
 
 /// Validates a raw 14-digit CNPJ by recomputing its two check digits.
 bool isValidCnpj(String digits) {

@@ -1,8 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid_generator/cpf/bloc/cpf_bloc.dart';
-import 'package:uuid_generator/cpf/data/cpf_model.dart';
-import 'package:uuid_generator/cpf/data/cpf_repository.dart';
+import 'package:fake_generator/cpf/bloc/cpf_bloc.dart';
+import 'package:fake_generator/cpf/data/cpf_model.dart';
+import 'package:fake_generator/cpf/data/cpf_repository.dart';
 
 class _FakeCpfRepository implements CpfRepository {
   @override
