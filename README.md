@@ -166,10 +166,10 @@ in [pubspec.yaml](pubspec.yaml).
 | Windows | `windows/runner/main.cpp`, `windows/runner/Runner.rc` | window title, `ProductName` |
 
 The Dart package is `fake_generator`; the application id is
-`br.dev.minello.fake_generator` (`br.dev.minello.fakeGenerator` on Apple
-platforms, since bundle identifiers do not accept underscores). It is set in
+`br.dev.minello.fakegenerator` on every platform (no underscore, since Apple
+bundle identifiers do not accept one). It is set in
 `android/app/build.gradle.kts` (`namespace` + `applicationId`, plus the
-`android/app/src/main/kotlin/br/dev/minello/fake_generator/` package directory),
+`android/app/src/main/kotlin/br/dev/minello/fakegenerator/` package directory),
 `ios/Runner.xcodeproj/project.pbxproj`,
 `macos/Runner/Configs/AppInfo.xcconfig`, `linux/CMakeLists.txt`
 (`APPLICATION_ID`) and `tool/generate_icon.py` (`LINUX_APP_ID`, which names the

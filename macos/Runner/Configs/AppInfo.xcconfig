@@ -8,7 +8,7 @@
 PRODUCT_NAME = Fake Generator
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = br.dev.minello.fakeGenerator
+PRODUCT_BUNDLE_IDENTIFIER = br.dev.minello.fakegenerator
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 Minello. All rights reserved.

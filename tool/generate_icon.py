@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "assets" / "icon"
 WINDOWS_ICO = ROOT / "windows" / "runner" / "resources" / "app_icon.ico"
 LINUX_ICON_DIR = ROOT / "linux" / "packaging" / "icons" / "hicolor"
-LINUX_APP_ID = "br.dev.minello.fake_generator"
+LINUX_APP_ID = "br.dev.minello.fakegenerator"
 
 # Lado do glifo (em unidades logicas) nas camadas do icone adaptativo do Android.
 #

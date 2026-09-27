@@ -12,8 +12,8 @@ formas:
    freedesktop e são usados na instalação:
 
    ```
-   br.dev.minello.fake_generator.desktop
-   icons/hicolor/<tamanho>x<tamanho>/apps/br.dev.minello.fake_generator.png
+   br.dev.minello.fakegenerator.desktop
+   icons/hicolor/<tamanho>x<tamanho>/apps/br.dev.minello.fakegenerator.png
    ```
 
    Os PNGs são gerados por `python tool/generate_icon.py` (tamanhos 16 a 512).
@@ -37,7 +37,7 @@ cp -r linux/packaging/icons/hicolor ~/.local/share/icons/
 
 # Entrada do menu.
 mkdir -p ~/.local/share/applications
-cp linux/packaging/br.dev.minello.fake_generator.desktop ~/.local/share/applications/
+cp linux/packaging/br.dev.minello.fakegenerator.desktop ~/.local/share/applications/
 
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor 2>/dev/null || true

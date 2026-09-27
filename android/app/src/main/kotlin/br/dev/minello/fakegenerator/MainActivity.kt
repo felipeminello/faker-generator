@@ -1,4 +1,4 @@
-package br.dev.minello.fake_generator
+package br.dev.minello.fakegenerator
 
 import io.flutter.embedding.android.FlutterActivity
 
