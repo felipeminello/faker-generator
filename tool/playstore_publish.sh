@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Gera o AAB de release e envia para o Google Play.
 #
-#   tools/playstore_publish.sh [opções]
+#   tool/playstore_publish.sh [opções]
 #
 #   -t, --track TRILHA   internal (padrão), alpha, beta, production ou o nome
 #                        de uma trilha de teste fechado
 #   -n, --notes ARQUIVO  notas da versão no formato do Play Console, um bloco
 #                        <pt-BR>…</pt-BR> por idioma (padrão:
-#                        tools/release_notes.txt, se existir)
+#                        tool/release_notes.txt, se existir)
 #       --draft          cria a versão como rascunho, para lançar pelo Console
 #       --skip-build     envia o AAB que já está em build/, sem gerar de novo
 #   -y, --yes            não pede confirmação antes de gerar e enviar
@@ -43,11 +43,11 @@
 # 3. Na aba Permissões do app, adicione o SL Bomber. Marque a permissão de lançar em faixas de teste (Release to testing tracks), e também a de produção se for usar --track production.
 # 4. Envie o convite. Conta de serviço não precisa aceitar.
 
-# 3. Teste com tools/playstore_publish.sh. Se aparecer "The caller does not have permission", a permissão do passo 2 ainda não começou a valer, o que pode levar algumas horas.
+# 3. Teste com tool/playstore_publish.sh. Se aparecer "The caller does not have permission", a permissão do passo 2 ainda não começou a valer, o que pode levar algumas horas.
 
 set -euo pipefail
 
-PACKAGE_NAME=br.dev.minello.listadecompras
+PACKAGE_NAME=br.dev.minello.fakegenerator
 API=https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME
 UPLOAD_API=https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME
 
@@ -56,7 +56,7 @@ AAB=$ROOT/build/app/outputs/bundle/release/app-release.aab
 SERVICE_ACCOUNT=${PLAY_SERVICE_ACCOUNT_JSON:-$HOME/play-service-account-lista-de-compras.json}
 
 track=internal
-notes_file=$ROOT/tools/release_notes.txt
+notes_file=$ROOT/tool/release_notes.txt
 notes_given=false
 release_status=completed
 build=true

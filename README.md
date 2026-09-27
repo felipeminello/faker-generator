@@ -107,7 +107,7 @@ assets/
 tool/
 ├── generate_icon.py               # Draws every icon source; also writes the .ico and Linux icons
 ├── playstore_publish.sh           # Builds the AAB and publishes it to a Google Play track
-└── applestore_publish.sh          # Builds the IPA and sends it to TestFlight or App Store review (macOS)
+└── applestore_publish.sh          # Builds the iOS IPA or macOS .pkg and sends it to TestFlight / App Store review
 
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 

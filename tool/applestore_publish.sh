@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Gera o IPA de release e envia para o App Store Connect.
+# Gera o build de release do iOS ou do macOS e envia para o App Store Connect.
 #
 #   tool/applestore_publish.sh [opções]
 #
+#   -p, --platform NOME  ios (padrão) ou macos
 #   -t, --track DESTINO  testflight (padrão: só entra no TestFlight), appstore
 #                        (versão enviada para a revisão da App Store) ou o nome
 #                        de um grupo do TestFlight
@@ -13,40 +14,53 @@
 #       --draft          prepara sem enviar para revisão: a versão da App Store
 #                        fica pronta para enviar pelo App Store Connect, e o
 #                        build entra no grupo externo sem ir para a revisão beta
-#       --skip-build     envia o IPA que já está em build/ios/ipa, sem gerar de novo
+#       --skip-build     envia o que já está em build/ (o IPA em build/ios/ipa ou
+#                        o .pkg em build/macos/pkg), sem gerar de novo
 #   -y, --yes            não pede confirmação antes de gerar e enviar
 #   -h, --help           mostra esta ajuda
 #
 # A versão vem do pubspec.yaml (version: NOME+NÚMERO): o NOME vira o
-# CFBundleShortVersionString e o NÚMERO, o CFBundleVersion. A Apple recusa um
-# número que já foi enviado para o mesmo NOME e não aceita builds de um NOME
-# que já foi aprovado, então suba o número depois do + antes de cada envio, e
-# o NOME depois de cada versão publicada.
+# CFBundleShortVersionString e o NÚMERO, o CFBundleVersion. A Apple não aceita
+# builds de um NOME que já foi aprovado e recusa um NÚMERO repetido — no iOS,
+# dentro do mesmo NOME; no macOS, o NÚMERO precisa ser maior que o de todo
+# build já enviado. Suba o número depois do + antes de cada envio, e o NOME
+# depois de cada versão publicada.
 #
-# Só roda no macOS, com Xcode. Precisa do Team escolhido no projeto iOS, de
-# ITSAppUsesNonExemptEncryption no Info.plist, do app criado no App Store
-# Connect e de uma chave da API do App Store Connect: o Issuer ID em
-# ASC_ISSUER_ID e o arquivo em ~/.appstoreconnect/private_keys/AuthKey_<ID>.p8.
-# ASC_KEY_ID escolhe a chave quando há mais de uma lá, e ASC_KEY_PATH aponta
-# para uma guardada em outro lugar (com ASC_KEY_ID, se o arquivo não se chamar
-# AuthKey_<ID>.p8).
+# Só roda no macOS, com Xcode. Precisa do Team escolhido na configuração
+# Release do projeto, de ITSAppUsesNonExemptEncryption no Info.plist (e, no
+# macOS, de LSApplicationCategoryType), do app criado no App Store Connect e de
+# uma chave da API do App Store Connect: o Issuer ID em ASC_ISSUER_ID e o
+# arquivo em ~/.appstoreconnect/private_keys/AuthKey_<ID>.p8. ASC_KEY_ID escolhe
+# a chave quando há mais de uma lá, e ASC_KEY_PATH aponta para uma guardada em
+# outro lugar (com ASC_KEY_ID, se o arquivo não se chamar AuthKey_<ID>.p8).
 
 # Como preparar o Mac e o App Store Connect (uma vez só)
 
-# 1. Assinatura: abra ios/Runner.xcworkspace no Xcode e, em Runner → Signing &
-#    Capabilities, marque "Automatically manage signing" e escolha o Team. O
-#    Xcode precisa estar logado na conta (Xcode → Settings → Accounts) para
-#    gerar o certificado de distribuição.
+# 1. Assinatura: abra ios/Runner.xcworkspace (ou macos/Runner.xcworkspace) no
+#    Xcode e, em Runner → Signing & Capabilities, marque "Automatically manage
+#    signing" e escolha o Team. Se a tela mostrar um bloco por configuração
+#    (Signing (Debug), Signing (Release), Signing (Profile)), o que vale para
+#    publicar é o Signing (Release): o Team só no Profile não serve. No macOS,
+#    se o Signing Certificate ficar em "Sign to Run Locally", troque para
+#    "Development": a exportação reassina para a loja. O Xcode precisa estar
+#    logado na conta (Xcode → Settings → Accounts) para gerar os certificados
+#    de distribuição; o macOS usa também o "Mac Installer Distribution", que
+#    assina o .pkg.
 
-# 2. Conformidade de exportação: se o app não usa criptografia além da do
-#    sistema, declare isso em ios/Runner/Info.plist; sem a chave, todo build
-#    fica parado em "Conformidade de exportação ausente":
+# 2. Info.plist: se o app não usa criptografia além da do sistema, declare isso
+#    em ios/Runner/Info.plist e em macos/Runner/Info.plist; sem a chave, todo
+#    build fica parado em "Conformidade de exportação ausente":
 #      <key>ITSAppUsesNonExemptEncryption</key>
 #      <false/>
+#    O macOS também exige a categoria do app na Mac App Store:
+#      <key>LSApplicationCategoryType</key>
+#      <string>public.app-category.developer-tools</string>
 
 # 3. O app: em App Store Connect → Apps → + → Novo app, com o bundle ID
 #    br.dev.minello.fakegenerator. Se ele não aparecer na lista, registre antes
-#    em developer.apple.com → Certificates, IDs & Profiles → Identifiers.
+#    em developer.apple.com → Certificates, IDs & Profiles → Identifiers. O
+#    macOS entra no mesmo app (o bundle ID é o mesmo, então vira uma compra
+#    universal): na página do app, adicione a plataforma macOS.
 
 # 4. A chave da API: em App Store Connect → Usuários e acesso → Integrações →
 #    API do App Store Connect → Chaves da equipe, gere uma chave com acesso App
@@ -71,8 +85,6 @@ BUNDLE_ID=br.dev.minello.fakegenerator
 API=https://api.appstoreconnect.apple.com/v1
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-IPA_DIR=$ROOT/build/ios/ipa
-INFO_PLIST=$ROOT/ios/Runner/Info.plist
 KEYS_DIR=$HOME/.appstoreconnect/private_keys
 
 # Estados de uma versão da App Store, nos dois campos que a API usa
@@ -84,6 +96,7 @@ CLOSED_STATES='ACCEPTED PENDING_APPLE_RELEASE PENDING_DEVELOPER_RELEASE PENDING_
 EDITABLE_STATES='PREPARE_FOR_SUBMISSION READY_FOR_REVIEW DEVELOPER_REJECTED REJECTED
   METADATA_REJECTED INVALID_BINARY'
 
+platform=ios
 track=testflight
 notes_file=$ROOT/tool/release_notes.txt
 notes_given=false
@@ -168,29 +181,39 @@ api() {
 # Corpo JSON:API para POST/PATCH, montado pelo jq com os --arg passados.
 json() { jq -nc "$@"; }
 
-# O nome do .ipa vem do nome do app, então procura em vez de fixar.
-find_ipa() {
+# O nome do pacote vem do nome do app, então procura em vez de fixar.
+find_package() {
   local found
-  found=$(find "$IPA_DIR" -maxdepth 1 -name '*.ipa' 2>/dev/null || true)
+  found=$(find "$PACKAGE_DIR" -maxdepth 1 -name "*.$PACKAGE_EXT" 2>/dev/null || true)
   case $found in
-    '') die "não há IPA em ${IPA_DIR#"$ROOT"/} $1" ;;
-    *$'\n'*) die "há mais de um IPA em ${IPA_DIR#"$ROOT"/}: apague os que não servem" ;;
+    '') die "não há $PACKAGE_KIND em ${PACKAGE_DIR#"$ROOT"/} $1" ;;
+    *$'\n'*) die "há mais de um $PACKAGE_KIND em ${PACKAGE_DIR#"$ROOT"/}: apague os que não servem" ;;
   esac
-  ipa=$found
+  package=$found
 }
 
-# Confere que o IPA é deste app e desta versão antes de gastar tempo enviando.
-check_ipa() {
-  local entry ipa_bundle ipa_name ipa_code
-  entry=$(unzip -Z1 "$ipa" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -n 1 || true)
-  [ -n "$entry" ] || die "${ipa#"$ROOT"/} não tem Payload/*.app/Info.plist — não parece um IPA"
-  unzip -p "$ipa" "$entry" >"$tmp/Info.plist"
-  ipa_bundle=$(plutil -extract CFBundleIdentifier raw -o - "$tmp/Info.plist")
-  ipa_name=$(plutil -extract CFBundleShortVersionString raw -o - "$tmp/Info.plist")
-  ipa_code=$(plutil -extract CFBundleVersion raw -o - "$tmp/Info.plist")
-  [ "$ipa_bundle" = "$BUNDLE_ID" ] || die "${ipa#"$ROOT"/} é do app $ipa_bundle, não de $BUNDLE_ID"
-  [ "$ipa_name ($ipa_code)" = "$version_name ($version_code)" ] ||
-    die "${ipa#"$ROOT"/} tem a versão $ipa_name ($ipa_code), mas o pubspec.yaml diz $version_name ($version_code) — gere de novo sem --skip-build"
+# Confere que o pacote é deste app e desta versão antes de gastar tempo
+# enviando. O Info.plist do app fica em Payload/ no IPA e no Payload do
+# componente, dentro do .pkg.
+check_package() {
+  local entry package_bundle package_name package_code
+  if [ "$platform" = ios ]; then
+    entry=$(unzip -Z1 "$package" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -n 1 || true)
+    [ -n "$entry" ] || die "${package#"$ROOT"/} não tem Payload/*.app/Info.plist — não parece um IPA"
+    unzip -p "$package" "$entry" >"$tmp/Info.plist"
+  else
+    rm -rf "$tmp/pkg"
+    pkgutil --expand-full "$package" "$tmp/pkg" >/dev/null || die "não consegui abrir ${package#"$ROOT"/}"
+    entry=$(find "$tmp/pkg" -name Info.plist | grep -E '/Payload/[^/]+\.app/Contents/Info\.plist$' | head -n 1 || true)
+    [ -n "$entry" ] || die "${package#"$ROOT"/} não tem um .app com Info.plist — não parece o .pkg do app"
+    cp "$entry" "$tmp/Info.plist"
+  fi
+  package_bundle=$(plutil -extract CFBundleIdentifier raw -o - "$tmp/Info.plist")
+  package_name=$(plutil -extract CFBundleShortVersionString raw -o - "$tmp/Info.plist")
+  package_code=$(plutil -extract CFBundleVersion raw -o - "$tmp/Info.plist")
+  [ "$package_bundle" = "$BUNDLE_ID" ] || die "${package#"$ROOT"/} é do app $package_bundle, não de $BUNDLE_ID"
+  [ "$package_name ($package_code)" = "$version_name ($version_code)" ] ||
+    die "${package#"$ROOT"/} tem a versão $package_name ($package_code), mas o pubspec.yaml diz $version_name ($version_code) — gere de novo sem --skip-build"
 }
 
 cleanup() { [ -z "$tmp" ] || rm -rf "$tmp"; }
@@ -198,6 +221,11 @@ trap cleanup EXIT
 
 while [ $# -gt 0 ]; do
   case $1 in
+    -p | --platform)
+      [ $# -ge 2 ] || die "$1 precisa de um valor"
+      platform=$2
+      shift 2
+      ;;
     -t | --track)
       [ $# -ge 2 ] || die "$1 precisa de um valor"
       track=$2
@@ -220,16 +248,41 @@ done
 [ "$track" != testflight ] || [ "$draft" = false ] ||
   die "--draft só vale com -t appstore ou com um grupo externo do TestFlight"
 
+case $platform in
+  ios)
+    PLATFORM_LABEL=iOS
+    ASC_PLATFORM=IOS
+    PACKAGE_DIR=$ROOT/build/ios/ipa
+    PACKAGE_EXT=ipa
+    PACKAGE_KIND=IPA
+    ;;
+  macos)
+    PLATFORM_LABEL=macOS
+    ASC_PLATFORM=MAC_OS
+    PACKAGE_DIR=$ROOT/build/macos/pkg
+    PACKAGE_EXT=pkg
+    PACKAGE_KIND=.pkg
+    ARCHIVE=$ROOT/build/macos/Runner.xcarchive
+    ;;
+  *) die "plataforma desconhecida: $platform (use ios ou macos)" ;;
+esac
+PROJECT_DIR=$ROOT/$platform
+INFO_PLIST=$PROJECT_DIR/Runner/Info.plist
+
 # --- Pré-requisitos --------------------------------------------------------
 
 [ "$(uname)" = Darwin ] || die "o envio para a App Store precisa de um Mac com Xcode"
-for cmd in curl jq openssl xxd xcrun unzip plutil; do
+for cmd in curl jq openssl xxd xcrun xcodebuild unzip pkgutil plutil; do
   command -v "$cmd" >/dev/null || die "$cmd não está instalado"
 done
 tmp=$(mktemp -d)
 
 plutil -extract ITSAppUsesNonExemptEncryption raw -o - "$INFO_PLIST" >/dev/null 2>&1 ||
-  die "ios/Runner/Info.plist não declara ITSAppUsesNonExemptEncryption, e sem isso o build fica parado em \"Conformidade de exportação ausente\" (veja o passo 2 no começo deste script)"
+  die "${INFO_PLIST#"$ROOT"/} não declara ITSAppUsesNonExemptEncryption, e sem isso o build fica parado em \"Conformidade de exportação ausente\" (veja o passo 2 no começo deste script)"
+if [ "$platform" = macos ]; then
+  plutil -extract LSApplicationCategoryType raw -o - "$INFO_PLIST" >/dev/null 2>&1 ||
+    die "${INFO_PLIST#"$ROOT"/} não tem LSApplicationCategoryType, e a Mac App Store recusa o envio sem a categoria (veja o passo 2 no começo deste script)"
+fi
 
 [ -n "$issuer_id" ] ||
   die "ASC_ISSUER_ID não está definido — é o Issuer ID da chave da API do App Store Connect (veja o passo 4 no começo deste script)"
@@ -263,11 +316,14 @@ esac
 
 if [ "$build" = true ]; then
   command -v flutter >/dev/null || die "flutter não está no PATH"
-  grep -q 'DEVELOPMENT_TEAM = ' "$ROOT/ios/Runner.xcodeproj/project.pbxproj" ||
-    die "o projeto iOS não tem Team de assinatura: escolha um no Xcode (veja o passo 1 no começo deste script)"
+  # O Xcode guarda o Team por configuração, e só a Release importa aqui.
+  team=$(xcodebuild -project "$PROJECT_DIR/Runner.xcodeproj" -target Runner -configuration Release \
+    -showBuildSettings 2>/dev/null | sed -n 's/^ *DEVELOPMENT_TEAM = //p' | head -n 1)
+  [ -n "$team" ] ||
+    die "o projeto $platform/ não tem Team de assinatura na configuração Release: escolha um no Xcode, no bloco Signing (Release) de Runner → Signing & Capabilities (veja o passo 1 no começo deste script)"
 else
-  find_ipa "para enviar com --skip-build"
-  check_ipa
+  find_package "para enviar com --skip-build"
+  check_package
 fi
 
 release_notes='[]'
@@ -294,20 +350,31 @@ app=$(api GET /apps -G --data-urlencode "filter[bundleId]=$BUNDLE_ID" --data-url
 app_id=${app%% *}
 app_name=${app#* }
 
-# O macOS usa o mesmo bundle ID, então os filtros ficam só no iOS.
-used_codes=$(api GET /builds -G \
-  --data-urlencode "filter[app]=$app_id" \
-  --data-urlencode "filter[preReleaseVersion.version]=$version_name" \
-  --data-urlencode 'filter[preReleaseVersion.platform]=IOS' \
+# iOS e macOS dividem o app, então os builds e as versões são filtrados pela
+# plataforma. No macOS o número tem que crescer entre todas as versões, então
+# a busca não se limita ao NOME.
+build_filters=(--data-urlencode "filter[app]=$app_id" --data-urlencode "filter[preReleaseVersion.platform]=$ASC_PLATFORM")
+[ "$platform" = macos ] || build_filters+=(--data-urlencode "filter[preReleaseVersion.version]=$version_name")
+used_codes=$(api GET /builds -G "${build_filters[@]}" \
   --data-urlencode 'fields[builds]=version' \
+  --data-urlencode 'sort=-uploadedDate' \
   --data-urlencode 'limit=200' | jq -r '.data[].attributes.version')
 last_code=$(sort -n <<<"$used_codes" | tail -n 1)
-if grep -qx "$version_code" <<<"$used_codes"; then
-  die "o número $version_code já foi usado na versão $version_name (o último enviado é $last_code) — suba o número depois do + no pubspec.yaml"
+if [ "$platform" = macos ]; then
+  last_label="o último build no macOS é o ($last_code)"
+  [ -z "$last_code" ] || [ "$version_code" -gt "$last_code" ] ||
+    die "no macOS o número precisa ser maior que o de todo build já enviado (o último é $last_code) — suba o número depois do + no pubspec.yaml"
+else
+  last_label="o último build da $version_name é o ($last_code)"
+  if grep -qx "$version_code" <<<"$used_codes"; then
+    die "o número $version_code já foi usado na versão $version_name (o último enviado é $last_code) — suba o número depois do + no pubspec.yaml"
+  fi
 fi
+[ -n "$last_code" ] || last_label="primeiro build da $version_name no $PLATFORM_LABEL"
 
 # Uma linha "id NOME estado" por versão da App Store.
-store_versions=$(api GET "/apps/$app_id/appStoreVersions" -G --data-urlencode 'filter[platform]=IOS' --data-urlencode 'limit=200' |
+store_versions=$(api GET "/apps/$app_id/appStoreVersions" -G \
+  --data-urlencode "filter[platform]=$ASC_PLATFORM" --data-urlencode 'limit=200' |
   jq -r '.data[] | "\(.id) \(.attributes.versionString) \(.attributes.appVersionState // .attributes.appStoreState)"')
 same_version=
 editable_version=
@@ -319,7 +386,7 @@ while read -r id name state; do
   ! in_list "$state" "$EDITABLE_STATES" || editable_version="$id $name"
 done <<<"$store_versions"
 if [ -n "$same_version" ] && in_list "${same_version#* }" "$CLOSED_STATES"; then
-  die "a versão $version_name já foi aprovada na App Store e não aceita builds novos — suba o NOME antes do + no pubspec.yaml"
+  die "a versão $version_name já foi aprovada na App Store do $PLATFORM_LABEL e não aceita builds novos — suba o NOME antes do + no pubspec.yaml"
 fi
 
 store_version_id=
@@ -368,10 +435,8 @@ case $track in
     ;;
 esac
 
-printf '\n  App:      %s (%s)\n  Versão:   %s (%s) — %s\n  Destino:  %s\n' \
-  "$app_name" "$BUNDLE_ID" "$version_name" "$version_code" \
-  "$([ -n "$last_code" ] && echo "o último build da $version_name é o ($last_code)" || echo "primeiro build da $version_name")" \
-  "$destination"
+printf '\n  App:      %s (%s, %s)\n  Versão:   %s (%s) — %s\n  Destino:  %s\n' \
+  "$app_name" "$BUNDLE_ID" "$PLATFORM_LABEL" "$version_name" "$version_code" "$last_label" "$destination"
 if [ "$release_notes" = '[]' ]; then
   printf '  Notas:    nenhuma\n'
 else
@@ -391,25 +456,55 @@ fi
 # --- Build e envio ---------------------------------------------------------
 
 if [ "$build" = true ]; then
-  step "Gerando o IPA"
-  rm -f "$IPA_DIR"/*.ipa
-  build_args=(ipa --release)
+  build_args=()
   [ -f "$ROOT/config.json" ] && build_args+=(--dart-define-from-file=config.json)
-  (cd "$ROOT" && flutter build "${build_args[@]}")
-  find_ipa "— o build terminou sem gerar o IPA"
-  check_ipa
+  rm -f "$PACKAGE_DIR"/*."$PACKAGE_EXT"
+  if [ "$platform" = ios ]; then
+    step "Gerando o IPA"
+    (cd "$ROOT" && flutter build ipa --release ${build_args[@]+"${build_args[@]}"})
+  else
+    # O Flutter não gera .pkg: ele só prepara o projeto (versão, defines), e o
+    # Xcode arquiva e exporta, compilando o Dart pelo próprio build do Runner.
+    step "Preparando o projeto macOS"
+    (cd "$ROOT" && flutter build macos --release --config-only ${build_args[@]+"${build_args[@]}"})
+    step "Arquivando com o Xcode"
+    rm -rf "$ARCHIVE"
+    xcodebuild -quiet -workspace "$PROJECT_DIR/Runner.xcworkspace" -scheme Runner -configuration Release \
+      -destination 'generic/platform=macOS' -archivePath "$ARCHIVE" -allowProvisioningUpdates archive
+    step "Exportando o .pkg para a App Store"
+    cat >"$tmp/ExportOptions.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>destination</key>
+  <string>export</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>teamID</key>
+  <string>$team</string>
+</dict>
+</plist>
+EOF
+    xcodebuild -quiet -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$tmp/ExportOptions.plist" \
+      -exportPath "$PACKAGE_DIR" -allowProvisioningUpdates
+  fi
+  find_package "— o build terminou sem gerar o $PACKAGE_KIND"
+  check_package
 fi
 
 # O altool procura AuthKey_<ID>.p8 em API_PRIVATE_KEYS_DIR, então a chave ganha
 # esse nome num diretório temporário, esteja onde estiver.
-step "Enviando ${ipa#"$ROOT"/} ($(du -h "$ipa" | cut -f1 | tr -d ' '))"
+step "Enviando ${package#"$ROOT"/} ($(du -h "$package" | cut -f1 | tr -d ' '))"
 mkdir "$tmp/private_keys"
 ln -s "$key_path" "$tmp/private_keys/AuthKey_$key_id.p8"
-API_PRIVATE_KEYS_DIR=$tmp/private_keys xcrun altool --upload-package "$ipa" -t ios \
+API_PRIVATE_KEYS_DIR=$tmp/private_keys xcrun altool --upload-package "$package" -t "$platform" \
   --apple-id "$app_id" --bundle-id "$BUNDLE_ID" \
   --bundle-version "$version_code" --bundle-short-version-string "$version_name" \
   --apiKey "$key_id" --apiIssuer "$issuer_id" ||
-  die "o altool não conseguiu enviar o IPA (a resposta da Apple está acima)"
+  die "o altool não conseguiu enviar o $PACKAGE_KIND (a resposta da Apple está acima)"
 
 # Sem notas e sem grupo, não há o que fazer no build: a Apple processa sozinha.
 if [ "$track" = testflight ] && [ "$release_notes" = '[]' ]; then
@@ -426,7 +521,7 @@ while :; do
     --data-urlencode "filter[app]=$app_id" \
     --data-urlencode "filter[version]=$version_code" \
     --data-urlencode "filter[preReleaseVersion.version]=$version_name" \
-    --data-urlencode 'filter[preReleaseVersion.platform]=IOS' \
+    --data-urlencode "filter[preReleaseVersion.platform]=$ASC_PLATFORM" \
     --data-urlencode 'fields[builds]=processingState' |
     jq -r 'first(.data[] | "\(.id) \(.attributes.processingState)") // empty')
   case ${build_row#* } in
@@ -498,9 +593,9 @@ fi
 step "Preparando a versão $version_name na App Store"
 if [ -z "$store_version_id" ]; then
   store_version_id=$(api POST /appStoreVersions -H 'Content-Type: application/json' --data "$(
-    json --arg app "$app_id" --arg build "$build_id" --arg name "$version_name" '{data: {
+    json --arg app "$app_id" --arg build "$build_id" --arg name "$version_name" --arg platform "$ASC_PLATFORM" '{data: {
       type: "appStoreVersions",
-      attributes: {platform: "IOS", versionString: $name},
+      attributes: {platform: $platform, versionString: $name},
       relationships: {
         app: {data: {type: "apps", id: $app}},
         build: {data: {type: "builds", id: $build}}
@@ -545,14 +640,14 @@ fi
 step "Enviando para a revisão da App Store"
 submission_id=$(api GET /reviewSubmissions -G \
   --data-urlencode "filter[app]=$app_id" \
-  --data-urlencode 'filter[platform]=IOS' \
+  --data-urlencode "filter[platform]=$ASC_PLATFORM" \
   --data-urlencode 'filter[state]=READY_FOR_REVIEW' | jq -r '.data[0].id // empty')
 in_submission=false
 if [ -z "$submission_id" ]; then
   submission_id=$(api POST /reviewSubmissions -H 'Content-Type: application/json' --data "$(
-    json --arg app "$app_id" '{data: {
+    json --arg app "$app_id" --arg platform "$ASC_PLATFORM" '{data: {
       type: "reviewSubmissions",
-      attributes: {platform: "IOS"},
+      attributes: {platform: $platform},
       relationships: {app: {data: {type: "apps", id: $app}}}
     }}')" | jq -r .data.id)
 else
