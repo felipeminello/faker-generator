@@ -44,6 +44,7 @@ class MyApp extends StatelessWidget {
         ],
         child: MaterialApp(
           title: 'Fake Generator',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
