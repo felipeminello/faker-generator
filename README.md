@@ -136,7 +136,11 @@ assets/
 tool/
 ├── generate_icon.py               # Draws every icon source; also writes the .ico and Linux icons
 ├── playstore_publish.sh           # Builds the AAB and publishes it to a Google Play track
-└── applestore_publish.sh          # Builds the iOS IPA or macOS .pkg and sends it to TestFlight / App Store review
+├── applestore_publish.sh          # Builds the iOS IPA or macOS .pkg and sends it to TestFlight / App Store review
+└── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
+
+.github/workflows/
+└── release.yml                    # Tag v*.*.* → macOS/Windows/Linux builds on a GitHub Release
 
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
@@ -228,6 +232,50 @@ Desktop builds keep a CMake cache under `build/`. After renaming the binary or
 changing CMake settings, run `flutter clean` first, and close any running copy of
 the app — a running instance locks `flutter_windows.dll` and the build fails on
 the install step with `Permission denied`.
+
+## Releases
+
+[.github/workflows/release.yml](.github/workflows/release.yml) builds the desktop
+apps and attaches them to a GitHub Release. Trigger it by pushing a tag, or
+from *Actions → Release → Run workflow* with a version (the workflow then
+creates the tag on the commit it built):
+
+```bash
+git tag v1.2.0 && git push origin v1.2.0
+```
+
+The version (`X.Y.Z`) becomes the `--build-name` of every build. The release
+gets `FakeGenerator-macos.zip`, `FakeGenerator-windows.zip` and
+`FakeGenerator-linux.zip`, with notes generated from the commits.
+
+The macOS zip is signed with Developer ID and notarized, so it opens without a
+Gatekeeper warning. A local `flutter build macos` is only good on the machine
+that built it. To do the same locally:
+
+```bash
+flutter build macos --release
+tool/notarize.sh   # signs with Developer ID, notarizes, writes build/macos/FakeGenerator-macos.zip
+```
+
+It uses the same `ASC_ISSUER_ID`, `ASC_KEY_ID` and `TEAM_ID` as
+`tool/applestore_publish.sh`, and needs the *Developer ID Application*
+certificate in the keychain (Xcode → Settings → Accounts → Manage Certificates
+→ +).
+
+The Release configuration signs with the team's *Apple Development* certificate
+(which `applestore_publish.sh` relies on), and the CI runner does not have it.
+The workflow therefore builds with an `XCODE_XCCONFIG_FILE` override that makes
+the build ad-hoc signed; `notarize.sh` then re-signs it with Developer ID.
+
+The workflow reads these repository secrets:
+
+| Secret | Content |
+| --- | --- |
+| `MACOS_CERTIFICATE_P12` | Developer ID Application certificate + private key, exported as `.p12`, in base64 |
+| `MACOS_CERTIFICATE_PASSWORD` | Password of that `.p12` |
+| `ASC_KEY_P8` | Contents of the App Store Connect API key (`AuthKey_<ID>.p8`) |
+| `ASC_KEY_ID` | ID of that key |
+| `ASC_ISSUER_ID` | Issuer ID (App Store Connect → Users and Access → Integrations) |
 
 ## Dependencies
 

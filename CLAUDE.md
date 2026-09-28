@@ -46,7 +46,10 @@ flutter build windows           # release build (also: macos, linux, apk, ipa)
 python tool/generate_icon.py    # redraw the icon sources (Python 3 + pillow + numpy)
 dart run flutter_launcher_icons # apply icons to android/, ios/, macos/
 dart format .                   # format code
+tool/notarize.sh                # after flutter build macos: Developer ID signing + notarization + zip
 ```
+
+Releases: pushing a `vX.Y.Z` tag runs [.github/workflows/release.yml](.github/workflows/release.yml), which builds macOS (notarized), Windows, and Linux and attaches the zips to a GitHub Release. The macOS Release config signs with Apple Development (for `tool/applestore_publish.sh`), so CI builds with an `XCODE_XCCONFIG_FILE` ad-hoc override before `notarize.sh` re-signs — keep that step if the signing settings change. See "Releases" in README.md for the required secrets.
 
 ## Notes
 
