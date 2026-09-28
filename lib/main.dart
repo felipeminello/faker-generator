@@ -8,6 +8,9 @@ import 'cpf/data/cpf_repository.dart';
 import 'home/presentation/home_page.dart';
 import 'lorem/bloc/lorem_bloc.dart';
 import 'lorem/data/lorem_repository.dart';
+import 'password/bloc/password_bloc.dart';
+import 'password/data/password_history_repository.dart';
+import 'password/data/password_repository.dart';
 import 'uuid/bloc/uuid_bloc.dart';
 import 'uuid/data/uuid_repository.dart';
 
@@ -26,6 +29,8 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => CpfRepository()),
         RepositoryProvider(create: (_) => CnpjRepository()),
         RepositoryProvider(create: (_) => LoremRepository()),
+        RepositoryProvider(create: (_) => PasswordRepository()),
+        RepositoryProvider(create: (_) => PasswordHistoryRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -40,6 +45,12 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => LoremBloc(context.read<LoremRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => PasswordBloc(
+              context.read<PasswordRepository>(),
+              context.read<PasswordHistoryRepository>(),
+            )..add(const PasswordHistoryRequested()),
           ),
         ],
         child: MaterialApp(

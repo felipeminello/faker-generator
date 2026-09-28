@@ -15,6 +15,8 @@ class GeneratorActions extends StatelessWidget {
     required this.onGenerate,
     required this.onClear,
     this.generateLabel = 'Gerar',
+    this.regenerateLabel = 'Gerar novo',
+    this.onCopied,
   });
 
   /// The currently generated value, or `null` when there is nothing to copy.
@@ -26,6 +28,12 @@ class GeneratorActions extends StatelessWidget {
   /// Label for the generate button while nothing has been generated yet.
   final String generateLabel;
 
+  /// Label for the generate button once there is a value on screen.
+  final String regenerateLabel;
+
+  /// Called when the user copies [value] with the copy button.
+  final VoidCallback? onCopied;
+
   @override
   Widget build(BuildContext context) {
     final hasValue = value != null;
@@ -33,10 +41,15 @@ class GeneratorActions extends StatelessWidget {
     final generate = FilledButton.icon(
       onPressed: onGenerate,
       icon: const Icon(Icons.refresh),
-      label: Text(hasValue ? 'Gerar novo' : generateLabel),
+      label: Text(hasValue ? regenerateLabel : generateLabel),
     );
     final copy = OutlinedButton.icon(
-      onPressed: hasValue ? () => copyToClipboard(context, value!) : null,
+      onPressed: hasValue
+          ? () {
+              copyToClipboard(context, value!);
+              onCopied?.call();
+            }
+          : null,
       icon: const Icon(Icons.copy),
       label: const Text('Copiar'),
     );

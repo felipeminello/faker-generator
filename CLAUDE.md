@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values, plus Lorem Ipsum placeholder text.
+This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values, Lorem Ipsum placeholder text, and passwords.
 
 **Windows, macOS, Linux, Android, and iOS** runner directories are configured (see `.metadata`); there is no `web/`. Add it with `flutter create --platforms=web .` before targeting it. Development happens on Windows, so `flutter run` defaults to `-d windows`.
 
@@ -31,6 +31,7 @@ This project **must follow the BLoC (Business Logic Component) pattern** for sta
 - Suggested layering: `presentation` (widgets) → `bloc` (blocs/cubits, events, states) → `domain`/`data` (repositories, models). Widgets never call repositories directly; the Bloc mediates.
 - The UUID feature lives under [lib/uuid/](lib/uuid/), split into `presentation/` (`UuidPage` + view widgets), `bloc/` (`UuidBloc` with `UuidEvent`/`UuidState`), and `data/` (`UuidRepository`, `UuidModel`). [lib/main.dart](lib/main.dart) wires them together with `RepositoryProvider` + `BlocProvider`. New features should follow the same layering.
 - CPF, CNPJ, and Lorem Ipsum ([lib/lorem/](lib/lorem/)) follow the same layout. Lorem Ipsum is the configurable one: its options (unit, amount, opening sentence) live in a single `LoremState`, not in the widgets.
+- The password feature ([lib/password/](lib/password/)) is configurable the same way (`PasswordOptions` inside `PasswordState`) and is the only one with persistence: `PasswordHistoryRepository` keeps the last 10 passwords through `shared_preferences`. `PasswordBloc` only saves after the stored history has been loaded (`PasswordHistoryRequested`, added in `main.dart`), so an early generation cannot overwrite it.
 
 ## Commands
 
@@ -51,5 +52,6 @@ dart format .                   # format code
 
 - **Whenever new files are created, update [README.md](README.md) with the current project structure** so it always reflects the files and directories that exist in the repo.
 - Dart SDK constraint is `>=3.4.4 <4.0.0` (`pubspec.yaml`). Flutter channel is `stable`.
-- Non-SDK dependencies: `flutter_bloc` (state management), `cupertino_icons`; dev-only: `bloc_test`, `flutter_launcher_icons`. Add new packages via `flutter pub add <name>` so `pubspec.yaml` and `pubspec.lock` stay in sync.
+- Non-SDK dependencies: `flutter_bloc` (state management), `cupertino_icons`, `shared_preferences` (password history); dev-only: `bloc_test`, `flutter_launcher_icons`, `shared_preferences_platform_interface`. Add new packages via `flutter pub add <name>` so `pubspec.yaml` and `pubspec.lock` stay in sync.
+- Widget tests that open the password page need `SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty()` (see `test/widget_test.dart`): the plugin is not registered under `flutter test`. Likewise, copying hangs in tests unless the `SystemChannels.platform` clipboard call is mocked.
 - [test/widget_test.dart](test/widget_test.dart) covers the `UuidBloc` (driven by a fake repository) and the `UuidPage` widget (empty state, UUID render, close). It no longer references the removed counter.

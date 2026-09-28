@@ -1,8 +1,8 @@
 # Fake Generator
 
-A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, and **Lorem Ipsum**
-placeholder text, with one-click copy to the clipboard. CPF and CNPJ are
-generated with valid check digits.
+A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, **Lorem Ipsum**
+placeholder text, and **passwords**, with one-click copy to the clipboard. CPF
+and CNPJ are generated with valid check digits.
 
 Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
@@ -18,6 +18,20 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   amount, and whether the text opens with the classic
   "Lorem ipsum dolor sit amet...". Word and letter amounts are exact; changing
   an option regenerates the text on the spot.
+- **Senha** — random passwords (`Random.secure()`), 4 to 64 characters
+  (default 16). Toggle **Letras maiúsculas (A-Z)**, **Letras minúsculas
+  (a-z)**, **Números (0-9)** and **Caracteres especiais**, and pick which
+  special characters to use: all 32 ASCII punctuation characters are offered,
+  and `` `!@#$%^&*()_+-={}|;:',.<>/?~ `` are selected by default (`[ ] " \` are
+  left out, since many sites reject them). Every enabled class contributes at
+  least one character. Changing an option regenerates the password on the
+  spot; **Gerar nova** makes another one.
+
+  **Recentes** lists the last 10 passwords (tap one to copy it) and can clear
+  them. The history survives restarts: it is stored with `shared_preferences`,
+  in plain text inside the app's own storage. Tuning the options replaces the
+  newest entry instead of adding one per step (so dragging the length slider
+  does not flush the history), unless that password was copied.
 
 Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
 **Limpar** actions.
@@ -82,18 +96,33 @@ lib/
 │   │   └── cnpj_repository.dart
 │   └── presentation/
 │       └── cnpj_page.dart
-└── lorem/
-    ├── bloc/                      # LoremBloc, LoremEvent, LoremState
-    │   ├── lorem_bloc.dart
-    │   ├── lorem_event.dart
-    │   └── lorem_state.dart
+├── lorem/
+│   ├── bloc/                      # LoremBloc, LoremEvent, LoremState
+│   │   ├── lorem_bloc.dart
+│   │   ├── lorem_event.dart
+│   │   └── lorem_state.dart
+│   ├── data/
+│   │   ├── lorem_model.dart
+│   │   ├── lorem_repository.dart
+│   │   └── lorem_unit.dart        # Unit enum (parágrafos/palavras/letras/listas) + ranges
+│   └── presentation/
+│       ├── lorem_page.dart        # Bloc wiring
+│       └── lorem_view.dart        # Options + result UI
+└── password/
+    ├── bloc/                      # PasswordBloc, PasswordEvent, PasswordState
+    │   ├── password_bloc.dart
+    │   ├── password_event.dart
+    │   └── password_state.dart
     ├── data/
-    │   ├── lorem_model.dart
-    │   ├── lorem_repository.dart
-    │   └── lorem_unit.dart        # Unit enum (parágrafos/palavras/letras/listas) + ranges
+    │   ├── password_charset.dart  # Character classes (A-Z, a-z, 0-9, special) + labels
+    │   ├── password_options.dart  # Length, enabled classes, chosen special characters + limits
+    │   ├── password_model.dart
+    │   ├── password_repository.dart         # Generation (Random.secure)
+    │   └── password_history_repository.dart # Last 10 passwords, via shared_preferences
     └── presentation/
-        ├── lorem_page.dart        # Bloc wiring
-        └── lorem_view.dart        # Options + result UI
+        ├── password_page.dart     # Bloc wiring
+        ├── password_view.dart     # Options + result UI
+        └── recent_passwords.dart  # "Recentes": bottom sheet on phones, dialog on desktop
 
 assets/
 └── icon/                          # Icon sources (generated, see "App icon")
@@ -112,11 +141,12 @@ tool/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell, UUID/Lorem pages, phone-sized layout
+├── widget_test.dart               # App shell, UUID/Lorem/password pages, phone-sized layout
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
 ├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
-└── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
+├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
+└── password/                      # Generation, options, persisted history + PasswordBloc tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```
@@ -203,5 +233,9 @@ the install step with `Permission denied`.
 
 - `flutter_bloc` — state management (BLoC).
 - `cupertino_icons` — icons.
+- `shared_preferences` — keeps the recent passwords across restarts.
 - `bloc_test` (dev) — Bloc unit testing.
+- `shared_preferences_platform_interface` (dev) — in-memory preferences for
+  tests (`InMemorySharedPreferencesAsync`), since the plugin is not registered
+  there.
 - `flutter_launcher_icons` (dev) — generates the native launcher icons.
