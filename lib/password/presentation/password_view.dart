@@ -1,18 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../shared/presentation/generator_actions.dart';
+import '../../shared/presentation/monospace.dart';
 import '../../shared/presentation/responsive.dart';
 import '../data/password_charset.dart';
 import '../data/password_model.dart';
 import '../data/password_options.dart';
-
-/// Monospace style for passwords, where telling `l`/`I`/`1` and `O`/`0` apart
-/// matters. `monospace` is an alias only Android and Linux resolve; the
-/// fallbacks cover Apple platforms (Menlo) and Windows (Consolas).
-const passwordFont = TextStyle(
-  fontFamily: 'monospace',
-  fontFamilyFallback: ['Menlo', 'Consolas'],
-);
 
 /// Presentation widget for the password generator.
 ///
@@ -168,7 +161,7 @@ class _PasswordCard extends StatelessWidget {
                     (compact
                             ? theme.textTheme.titleLarge
                             : theme.textTheme.headlineSmall)
-                        ?.merge(passwordFont),
+                        ?.merge(monospaceFont),
               ),
       ),
     );
@@ -348,7 +341,7 @@ class _SymbolPicker extends StatelessWidget {
             children: [
               for (final symbol in catalog)
                 FilterChip(
-                  label: Text(symbol, style: passwordFont),
+                  label: Text(symbol, style: monospaceFont),
                   selected: options.symbols.contains(symbol),
                   showCheckmark: false,
                   visualDensity: VisualDensity.compact,

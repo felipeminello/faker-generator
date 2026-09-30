@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values, Lorem Ipsum placeholder text, and passwords.
+This is a Flutter project in early development. The app is called **Fake Generator** (Dart package `fake_generator`) and generates UUID v4, CPF, and CNPJ values, Lorem Ipsum placeholder text, and passwords, and has a cron expression editor.
 
 **Windows, macOS, Linux, Android, and iOS** runner directories are configured (see `.metadata`); there is no `web/`. Add it with `flutter create --platforms=web .` before targeting it. Development happens on Windows, so `flutter run` defaults to `-d windows`.
 
@@ -31,6 +31,7 @@ This project **must follow the BLoC (Business Logic Component) pattern** for sta
 - Suggested layering: `presentation` (widgets) → `bloc` (blocs/cubits, events, states) → `domain`/`data` (repositories, models). Widgets never call repositories directly; the Bloc mediates.
 - The UUID feature lives under [lib/uuid/](lib/uuid/), split into `presentation/` (`UuidPage` + view widgets), `bloc/` (`UuidBloc` with `UuidEvent`/`UuidState`), and `data/` (`UuidRepository`, `UuidModel`). [lib/main.dart](lib/main.dart) wires them together with `RepositoryProvider` + `BlocProvider`. New features should follow the same layering.
 - CPF, CNPJ, and Lorem Ipsum ([lib/lorem/](lib/lorem/)) follow the same layout. Lorem Ipsum is the configurable one: its options (unit, amount, opening sentence) live in a single `LoremState`, not in the widgets.
+- The cron editor ([lib/cron/](lib/cron/)) is modeled on crontab.guru: `CronState` holds the typed text plus either a `CronModel` (Portuguese description + next runs) or a `CronFormatException` (message + the field at fault). Parsing, descriptions and the cursor→field lookup live in `data/`; the view only mirrors the text field into `CronExpressionChanged`/`CronCursorMoved`, and its input formatter inserts the spaces `CronSchedule.missingSpaces` says are missing between fields. It follows Vixie cron semantics, including the day-of-month/day-of-week "or" rule — keep `CronSchedule.runsOn` and the description in `cron_description.dart` in agreement.
 - The password feature ([lib/password/](lib/password/)) is configurable the same way (`PasswordOptions` inside `PasswordState`) and is the only one with persistence: `PasswordHistoryRepository` keeps the last 10 passwords through `shared_preferences`. `PasswordBloc` only saves after the stored history has been loaded (`PasswordHistoryRequested`, added in `main.dart`), so an early generation cannot overwrite it.
 
 ## Commands

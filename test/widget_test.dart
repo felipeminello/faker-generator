@@ -1,4 +1,4 @@
-// Widget tests for the generator app shell and the UUID page wiring.
+// Widget tests for the generator app shell and the feature pages.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -147,6 +147,164 @@ void main() {
     expect(find.text('Copiado para a área de transferência'), findsOneWidget);
   });
 
+  testWidgets('explains a cron expression as it is typed', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '*/15 9-17 * * 1-5');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        '“A cada 15 minutos nas horas de 9 a 17, de segunda-feira a '
+        'sexta-feira.”',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Próximas execuções'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '*/15 25 * * 1-5');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('25 está fora do intervalo de hora: 0-23.'),
+      findsOneWidget,
+    );
+    expect(find.text('Próximas execuções'), findsNothing);
+  });
+
+  testWidgets('generates, then clears, a random cron expression', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text.split(' '), hasLength(5));
+    expect(find.text('Gerar nova'), findsOneWidget);
+    expect(find.text('Nenhuma expressão ainda'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(field.controller!.text, isEmpty);
+    expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
+  });
+
+  testWidgets('uses a cron example picked from the list', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Exemplos'));
+    await tester.pumpAndSettle();
+    final example = find.text('Dias úteis às 9h');
+    await tester.scrollUntilVisible(
+      example,
+      100,
+      scrollable: find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.tap(example);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.widgetWithText(TextField, '0 9 * * 1-5'), findsOneWidget);
+    expect(
+      find.text('“Às 09:00, de segunda-feira a sexta-feira.”'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('spaces out cron fields typed or pasted together', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+    final field = find.byType(TextField);
+    TextEditingController controller() =>
+        tester.widget<TextField>(field).controller!;
+
+    // Typed one character at a time, at the end.
+    for (final char in '*/5****'.split('')) {
+      await tester.enterText(field, controller().text + char);
+    }
+    await tester.pumpAndSettle();
+
+    expect(controller().text, '*/5 * * * *');
+    expect(find.text('“A cada 5 minutos.”'), findsOneWidget);
+
+    // Pasted.
+    await tester.enterText(field, '0 9**1-5');
+    await tester.pumpAndSettle();
+
+    expect(controller().text, '0 9 * * 1-5');
+  });
+
+  testWidgets('a cron field typed in front of another keeps growing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '* * * * *');
+    await tester.pumpAndSettle();
+    final controller = tester
+        .widget<TextField>(find.byType(TextField))
+        .controller!;
+
+    // "1" typed at the start: the space goes in, the cursor stays before it.
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '1* * * * *',
+        selection: TextSelection.collapsed(offset: 1),
+      ),
+    );
+    await tester.pump();
+
+    expect(controller.text, '1 * * * * *');
+    expect(controller.selection, const TextSelection.collapsed(offset: 1));
+
+    // So the "5" typed next joins the same field.
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '15 * * * * *',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+    await tester.pump();
+
+    expect(controller.text, '15 * * * * *');
+  });
+
+  testWidgets('shows the values of the cron field being edited', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '5 4 * * *');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'hora'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.selection.textInside('5 4 * * *'), '4');
+    expect(find.text('Referência · hora'), findsOneWidget);
+    expect(find.text('0-23'), findsOneWidget);
+  });
+
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -191,7 +349,7 @@ void main() {
     testWidgets('lays out every page without overflowing', (tester) async {
       await tester.pumpWidget(const MyApp());
 
-      for (final tab in ['UUID v4', 'CPF', 'CNPJ', 'Lorem', 'Senha']) {
+      for (final tab in ['UUID v4', 'CPF', 'CNPJ', 'Lorem', 'Senha', 'Cron']) {
         await tester.tap(find.text(tab).last);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Gerar'));

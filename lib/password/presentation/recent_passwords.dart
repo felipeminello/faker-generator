@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../shared/presentation/copy_to_clipboard.dart';
+import '../../shared/presentation/monospace.dart';
 import '../../shared/presentation/responsive.dart';
 import '../bloc/password_bloc.dart';
 import '../data/password_history_repository.dart';
 import '../data/password_model.dart';
-import 'password_view.dart';
 
 /// Lists the recent passwords: in a bottom sheet on phones, in a dialog on
 /// wider windows. Picking one copies it to the clipboard.
@@ -131,7 +131,7 @@ class _RecentTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 24),
       title: Text(
         password.value,
-        style: theme.textTheme.bodyLarge?.merge(passwordFont),
+        style: theme.textTheme.bodyLarge?.merge(monospaceFont),
       ),
       subtitle: Text(
         '${password.length} caracteres · ${_when(password.createdAt)}',

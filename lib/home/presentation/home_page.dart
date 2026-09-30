@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../cnpj/presentation/cnpj_page.dart';
 import '../../cpf/presentation/cpf_page.dart';
+import '../../cron/presentation/cron_page.dart';
 import '../../lorem/presentation/lorem_page.dart';
 import '../../password/presentation/password_page.dart';
 import '../../shared/presentation/responsive.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
     CnpjPage(),
     LoremPage(),
     PasswordPage(),
+    CronPage(),
   ];
 
   /// One entry per feature, shared by the rail and the bottom bar.
@@ -59,6 +61,11 @@ class _HomePageState extends State<HomePage> {
       icon: Icons.password_outlined,
       selectedIcon: Icons.password,
       label: 'Senha',
+    ),
+    _Destination(
+      icon: Icons.schedule_outlined,
+      selectedIcon: Icons.schedule,
+      label: 'Cron',
     ),
   ];
 

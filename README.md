@@ -1,8 +1,9 @@
 # Fake Generator
 
 A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, **Lorem Ipsum**
-placeholder text, and **passwords**, with one-click copy to the clipboard. CPF
-and CNPJ are generated with valid check digits.
+placeholder text, and **passwords**, and edits **cron** expressions, with
+one-click copy to the clipboard. CPF and CNPJ are generated with valid check
+digits.
 
 Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
@@ -32,6 +33,28 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   in plain text inside the app's own storage. Tuning the options replaces the
   newest entry instead of adding one per step (so dragging the length slider
   does not flush the history), unless that password was copied.
+
+- **Cron** — a cron schedule editor in the spirit of
+  [crontab.guru](https://crontab.guru/). Type an expression and it is explained
+  on the spot in Portuguese ("Às 04:05.", "A cada 15 minutos nas horas de 9 a
+  17, de segunda-feira a sexta-feira."), with the **next 5 runs** in local
+  time. Fields typed or pasted without the space between them are spaced
+  out automatically (`*****` → `* * * * *`, `*/5*` → `*/5 *`); numbers and
+  names are never split, and `@` shortcuts are left alone. The chips under the
+  field (minuto, hora, dia (mês), mês, dia (semana))
+  follow the cursor, select that field when tapped, and turn red on the field
+  an error points at; the **Referência** card lists `*` `,` `-` `/` plus the
+  values the current field accepts (or the `@` shortcuts). **Exemplos** offers
+  common schedules, and **Gerar** makes up a random, valid expression.
+
+  The syntax is Vixie cron's, as crontab.guru describes it: names
+  (`JAN`–`DEC`, `SUN`–`SAT`), 7 as Sunday, steps no larger than the field,
+  `@yearly`/`@annually`/`@monthly`/`@weekly`/`@daily`/`@midnight`/`@hourly`/`@reboot`,
+  and `5/15` (every 15 from 5) as an extension. When both day of month and day
+  of week are restricted the job runs on days matching **either** — unless one
+  of them starts with `*`, and then **both** must match; the description and
+  the next runs follow that rule. Dates that never exist (`0 0 30 2 *`) are
+  flagged.
 
 Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
 **Limpar** actions.
@@ -65,6 +88,7 @@ lib/
 │       ├── generator_view.dart    # Reusable result card + generate/copy/clear UI
 │       ├── generator_actions.dart # Gerar/Copiar/Limpar bar, stacked when compact
 │       ├── responsive.dart        # Compact breakpoint + page padding helpers
+│       ├── monospace.dart         # Monospace text style (passwords, cron)
 │       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar
 ├── uuid/
 │   ├── bloc/                      # UuidBloc, UuidEvent, UuidState
@@ -108,21 +132,39 @@ lib/
 │   └── presentation/
 │       ├── lorem_page.dart        # Bloc wiring
 │       └── lorem_view.dart        # Options + result UI
-└── password/
-    ├── bloc/                      # PasswordBloc, PasswordEvent, PasswordState
-    │   ├── password_bloc.dart
-    │   ├── password_event.dart
-    │   └── password_state.dart
+├── password/
+│   ├── bloc/                      # PasswordBloc, PasswordEvent, PasswordState
+│   │   ├── password_bloc.dart
+│   │   ├── password_event.dart
+│   │   └── password_state.dart
+│   ├── data/
+│   │   ├── password_charset.dart  # Character classes (A-Z, a-z, 0-9, special) + labels
+│   │   ├── password_options.dart  # Length, enabled classes, chosen special characters + limits
+│   │   ├── password_model.dart
+│   │   ├── password_repository.dart         # Generation (Random.secure)
+│   │   └── password_history_repository.dart # Last 10 passwords, via shared_preferences
+│   └── presentation/
+│       ├── password_page.dart     # Bloc wiring
+│       ├── password_view.dart     # Options + result UI
+│       └── recent_passwords.dart  # "Recentes": bottom sheet on phones, dialog on desktop
+└── cron/
+    ├── bloc/                      # CronBloc, CronEvent, CronState
+    │   ├── cron_bloc.dart
+    │   ├── cron_event.dart
+    │   └── cron_state.dart
     ├── data/
-    │   ├── password_charset.dart  # Character classes (A-Z, a-z, 0-9, special) + labels
-    │   ├── password_options.dart  # Length, enabled classes, chosen special characters + limits
-    │   ├── password_model.dart
-    │   ├── password_repository.dart         # Generation (Random.secure)
-    │   └── password_history_repository.dart # Last 10 passwords, via shared_preferences
+    │   ├── cron_field.dart        # The 5 fields: ranges, JAN-DEC / SUN-SAT names
+    │   ├── cron_macro.dart        # @yearly ... @reboot and what they stand for
+    │   ├── cron_schedule.dart     # Parser (with per-field errors) + next runs
+    │   ├── cron_description.dart  # Portuguese description ("Às 04:05.")
+    │   ├── cron_text.dart         # Portuguese words: lists, month and weekday names
+    │   ├── cron_model.dart        # Explained expression: description + next runs
+    │   ├── cron_example.dart      # The "Exemplos" list
+    │   └── cron_repository.dart   # explain(), random(), field positions
     └── presentation/
-        ├── password_page.dart     # Bloc wiring
-        ├── password_view.dart     # Options + result UI
-        └── recent_passwords.dart  # "Recentes": bottom sheet on phones, dialog on desktop
+        ├── cron_page.dart         # Bloc wiring (refreshes the next runs when shown)
+        ├── cron_view.dart         # Description, editor + field chips, next runs, reference
+        └── cron_examples.dart     # "Exemplos": bottom sheet on phones, dialog on desktop
 
 assets/
 └── icon/                          # Icon sources (generated, see "App icon")
@@ -145,12 +187,13 @@ tool/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell, UUID/Lorem/password pages, phone-sized layout
+├── widget_test.dart               # App shell, UUID/Lorem/password/cron pages, phone-sized layout
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
 ├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
 ├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
-└── password/                      # Generation, options, persisted history + PasswordBloc tests
+├── password/                      # Generation, options, persisted history + PasswordBloc tests
+└── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```

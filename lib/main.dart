@@ -5,6 +5,8 @@ import 'cnpj/bloc/cnpj_bloc.dart';
 import 'cnpj/data/cnpj_repository.dart';
 import 'cpf/bloc/cpf_bloc.dart';
 import 'cpf/data/cpf_repository.dart';
+import 'cron/bloc/cron_bloc.dart';
+import 'cron/data/cron_repository.dart';
 import 'home/presentation/home_page.dart';
 import 'lorem/bloc/lorem_bloc.dart';
 import 'lorem/data/lorem_repository.dart';
@@ -31,6 +33,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => LoremRepository()),
         RepositoryProvider(create: (_) => PasswordRepository()),
         RepositoryProvider(create: (_) => PasswordHistoryRepository()),
+        RepositoryProvider(create: (_) => CronRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -51,6 +54,9 @@ class MyApp extends StatelessWidget {
               context.read<PasswordRepository>(),
               context.read<PasswordHistoryRepository>(),
             )..add(const PasswordHistoryRequested()),
+          ),
+          BlocProvider(
+            create: (context) => CronBloc(context.read<CronRepository>()),
           ),
         ],
         child: MaterialApp(
