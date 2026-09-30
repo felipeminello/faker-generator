@@ -305,6 +305,48 @@ void main() {
     expect(find.text('0-23'), findsOneWidget);
   });
 
+  testWidgets('draws a QR Code for the typed text', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('QR Code'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum QR Code ainda'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'HELLO WORLD');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum QR Code ainda'), findsNothing);
+    expect(find.bySemanticsLabel('QR Code de: HELLO WORLD'), findsOneWidget);
+    expect(find.text('Versão 1 · 21×21 módulos · 11 bytes'), findsOneWidget);
+
+    await tester.tap(find.text('H'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Versão 2 · 25×25 módulos · 11 bytes'), findsOneWidget);
+  });
+
+  testWidgets('generates, then clears, a sample QR Code content', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('QR Code'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, isNotEmpty);
+    expect(find.text('Gerar outro'), findsOneWidget);
+    expect(find.textContaining('módulos'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(field.controller!.text, isEmpty);
+    expect(find.text('Nenhum QR Code ainda'), findsOneWidget);
+  });
+
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -349,7 +391,15 @@ void main() {
     testWidgets('lays out every page without overflowing', (tester) async {
       await tester.pumpWidget(const MyApp());
 
-      for (final tab in ['UUID v4', 'CPF', 'CNPJ', 'Lorem', 'Senha', 'Cron']) {
+      for (final tab in [
+        'UUID v4',
+        'CPF',
+        'CNPJ',
+        'Lorem',
+        'Senha',
+        'Cron',
+        'QR Code',
+      ]) {
         await tester.tap(find.text(tab).last);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Gerar'));
@@ -414,6 +464,14 @@ void main() {
       // iPhone SE (1st gen) width: the tightest layout the app has to survive.
       _setSurface(const Size(320, 568));
       await tester.pumpWidget(const MyApp());
+      // The QR Code page is the tallest: the code alone is as wide as the
+      // screen.
+      await tester.tap(find.text('QR Code'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Gerar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('UUID v4').last);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Gerar'));
       await tester.pumpAndSettle();
 

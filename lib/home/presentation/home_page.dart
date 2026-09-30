@@ -5,6 +5,7 @@ import '../../cpf/presentation/cpf_page.dart';
 import '../../cron/presentation/cron_page.dart';
 import '../../lorem/presentation/lorem_page.dart';
 import '../../password/presentation/password_page.dart';
+import '../../qr_code/presentation/qr_code_page.dart';
 import '../../shared/presentation/responsive.dart';
 import '../../uuid/presentation/uuid_page.dart';
 
@@ -33,6 +34,7 @@ class _HomePageState extends State<HomePage> {
     LoremPage(),
     PasswordPage(),
     CronPage(),
+    QrCodePage(),
   ];
 
   /// One entry per feature, shared by the rail and the bottom bar.
@@ -66,6 +68,11 @@ class _HomePageState extends State<HomePage> {
       icon: Icons.schedule_outlined,
       selectedIcon: Icons.schedule,
       label: 'Cron',
+    ),
+    _Destination(
+      icon: Icons.qr_code_2_outlined,
+      selectedIcon: Icons.qr_code_2,
+      label: 'QR Code',
     ),
   ];
 

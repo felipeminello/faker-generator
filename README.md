@@ -1,8 +1,8 @@
 # Fake Generator
 
 A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, **Lorem Ipsum**
-placeholder text, and **passwords**, and edits **cron** expressions, with
-one-click copy to the clipboard. CPF and CNPJ are generated with valid check
+placeholder text, **passwords** and **QR Codes**, and edits **cron**
+expressions, with one-click copy to the clipboard. CPF and CNPJ are generated with valid check
 digits.
 
 Supported targets: **Windows, macOS, Linux, Android, and iOS**.
@@ -55,6 +55,16 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   of them starts with `*`, and then **both** must match; the description and
   the next runs follow that rule. Dates that never exist (`0 0 30 2 *`) are
   flagged.
+- **QR Code** — type a text, link, Wi-Fi string, e-mail or phone and the code
+  is drawn as you type, black on white with the standard 4-module quiet zone.
+  Pick the error correction level (**L** ~7%, **M** ~15%, **Q** ~25%, **H**
+  ~30%); the code grows to the smallest version (1–40) that fits, and the line
+  under it shows version, size in modules and bytes. Text too long for the
+  level (over 2,953 bytes at L down to 1,273 at H) is flagged instead of drawn.
+  Accented text is written as UTF-8 behind an ECI header, so scanners do not
+  read "ç" as "Ã§". **Gerar** makes up a sample content (link, Wi-Fi, e-mail,
+  phone or text); **Copiar** copies the text. Encoding uses the pure-Dart
+  [`qr`](https://pub.dev/packages/qr) package; drawing is a `CustomPainter`.
 
 Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
 **Limpar** actions.
@@ -147,6 +157,19 @@ lib/
 │       ├── password_page.dart     # Bloc wiring
 │       ├── password_view.dart     # Options + result UI
 │       └── recent_passwords.dart  # "Recentes": bottom sheet on phones, dialog on desktop
+├── qr_code/
+│   ├── bloc/                      # QrCodeBloc, QrCodeEvent, QrCodeState
+│   │   ├── qr_code_bloc.dart
+│   │   ├── qr_code_event.dart
+│   │   └── qr_code_state.dart
+│   ├── data/
+│   │   ├── qr_code_level.dart     # Error correction levels L/M/Q/H + byte limits
+│   │   ├── qr_code_model.dart     # Encoded modules + QrCodeTooLongException
+│   │   └── qr_code_repository.dart # encode() (qr package, UTF-8 + ECI), random() samples
+│   └── presentation/
+│       ├── qr_code_page.dart      # Bloc wiring
+│       ├── qr_code_view.dart      # Text field, level selector, preview
+│       └── qr_code_painter.dart   # CustomPainter: modules + quiet zone
 └── cron/
     ├── bloc/                      # CronBloc, CronEvent, CronState
     │   ├── cron_bloc.dart
@@ -187,13 +210,14 @@ tool/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell, UUID/Lorem/password/cron pages, phone-sized layout
+├── widget_test.dart               # App shell, UUID/Lorem/password/cron/QR Code pages, phone-sized layout
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
 ├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
 ├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
 ├── password/                      # Generation, options, persisted history + PasswordBloc tests
-└── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
+├── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
+└── qr_code/                       # Encoding, level limits, samples + QrCodeBloc tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```

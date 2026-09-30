@@ -13,6 +13,8 @@ import 'lorem/data/lorem_repository.dart';
 import 'password/bloc/password_bloc.dart';
 import 'password/data/password_history_repository.dart';
 import 'password/data/password_repository.dart';
+import 'qr_code/bloc/qr_code_bloc.dart';
+import 'qr_code/data/qr_code_repository.dart';
 import 'uuid/bloc/uuid_bloc.dart';
 import 'uuid/data/uuid_repository.dart';
 
@@ -34,6 +36,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PasswordRepository()),
         RepositoryProvider(create: (_) => PasswordHistoryRepository()),
         RepositoryProvider(create: (_) => CronRepository()),
+        RepositoryProvider(create: (_) => QrCodeRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -57,6 +60,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider(
             create: (context) => CronBloc(context.read<CronRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => QrCodeBloc(context.read<QrCodeRepository>()),
           ),
         ],
         child: MaterialApp(

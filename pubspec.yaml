@@ -1,5 +1,5 @@
 name: fake_generator
-description: "Gerador de dados fake: UUID v4, CPF, CNPJ, texto Lorem Ipsum, senhas e expressões cron."
+description: "Gerador de dados fake: UUID v4, CPF, CNPJ, texto Lorem Ipsum, senhas, QR Codes e expressões cron."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   shared_preferences: ^2.5.5
+  qr: ^4.0.0
 
 dev_dependencies:
   flutter_test:
