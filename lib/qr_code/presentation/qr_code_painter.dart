@@ -1,9 +1,10 @@
 import 'package:flutter/rendering.dart';
 
 import '../data/qr_code_model.dart';
+import '../data/qr_code_png.dart';
 
 /// Paints [qrCode] black on white, with the 4-module quiet zone the standard
-/// asks for around it.
+/// asks for around it — the same picture `encodeQrCodePng` saves.
 ///
 /// The colors are fixed rather than taken from the theme: scanners expect
 /// dark modules on a light background.
@@ -12,8 +13,7 @@ class QrCodePainter extends CustomPainter {
 
   final QrCodeModel qrCode;
 
-  /// Blank modules on each side of the code.
-  static const quietZone = 4;
+  static const quietZone = qrCodeQuietZone;
 
   static const _light = Color(0xFFFFFFFF);
   static const _dark = Color(0xFF000000);

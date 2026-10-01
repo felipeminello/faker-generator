@@ -1,5 +1,6 @@
 // Widget tests for the generator app shell and the feature pages.
 
+import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -347,6 +348,32 @@ void main() {
     expect(find.text('Nenhum QR Code ainda'), findsOneWidget);
   });
 
+  testWidgets('downloads the QR Code as a PNG instead of copying it', (
+    tester,
+  ) async {
+    final dialog = _FakeFilePicker();
+    FilePickerPlatform.instance = dialog;
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.text('QR Code'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Copiar'), findsNothing);
+    final download = find.widgetWithText(OutlinedButton, 'Download');
+    expect(tester.widget<OutlinedButton>(download).onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField), 'HELLO WORLD');
+    await tester.pumpAndSettle();
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+
+    expect(dialog.saved.single.fileName, 'qrcode.png');
+    expect(dialog.saved.single.mimeType, 'image/png');
+    expect(
+      find.text('QR Code salvo em ${Uri.file('/tmp/qrcode.png').toFilePath()}'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -482,6 +509,28 @@ void main() {
       expect(tester.getSize(label).height, lessThan(32));
     });
   });
+}
+
+/// Stands in for the native "save as" dialog: records each save and answers
+/// as if the user picked `/tmp/qrcode.png`.
+class _FakeFilePicker extends FilePickerPlatform {
+  final saved = <({String fileName, String mimeType, Uint8List bytes})>[];
+
+  @override
+  Future<Uri?> saveFile({
+    required String fileName,
+    required Uint8List bytes,
+    required String mimeType,
+    String? dialogTitle,
+    String? initialDirectory,
+    Function(FilePickerStatus)? onFileSaving,
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    saved.add((fileName: fileName, mimeType: mimeType, bytes: bytes));
+    return Uri.file('/tmp/qrcode.png');
+  }
 }
 
 /// Answers the clipboard channel, which has no platform behind it in tests

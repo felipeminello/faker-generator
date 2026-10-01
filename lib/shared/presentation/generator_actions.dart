@@ -5,6 +5,9 @@ import 'responsive.dart';
 
 /// "Gerar / Copiar / Limpar" action bar shared by every generator feature.
 ///
+/// A feature whose result is not text can swap "Copiar" for another
+/// [secondaryAction] (the QR Code page downloads an image instead).
+///
 /// On wide windows the three actions sit side by side; on phones they stack,
 /// so the generate button keeps its full width instead of being squeezed
 /// until its label wraps one letter per line.
@@ -17,6 +20,7 @@ class GeneratorActions extends StatelessWidget {
     this.generateLabel = 'Gerar',
     this.regenerateLabel = 'Gerar novo',
     this.onCopied,
+    this.secondaryAction,
   });
 
   /// The currently generated value, or `null` when there is nothing to copy.
@@ -34,6 +38,9 @@ class GeneratorActions extends StatelessWidget {
   /// Called when the user copies [value] with the copy button.
   final VoidCallback? onCopied;
 
+  /// Shown instead of the copy button when set.
+  final GeneratorSecondaryAction? secondaryAction;
+
   @override
   Widget build(BuildContext context) {
     final hasValue = value != null;
@@ -43,16 +50,23 @@ class GeneratorActions extends StatelessWidget {
       icon: const Icon(Icons.refresh),
       label: Text(hasValue ? regenerateLabel : generateLabel),
     );
-    final copy = OutlinedButton.icon(
-      onPressed: hasValue
-          ? () {
-              copyToClipboard(context, value!);
-              onCopied?.call();
-            }
-          : null,
-      icon: const Icon(Icons.copy),
-      label: const Text('Copiar'),
-    );
+    final secondary = secondaryAction;
+    final copy = secondary != null
+        ? OutlinedButton.icon(
+            onPressed: secondary.onPressed,
+            icon: Icon(secondary.icon),
+            label: Text(secondary.label),
+          )
+        : OutlinedButton.icon(
+            onPressed: hasValue
+                ? () {
+                    copyToClipboard(context, value!);
+                    onCopied?.call();
+                  }
+                : null,
+            icon: const Icon(Icons.copy),
+            label: const Text('Copiar'),
+          );
     final clear = IconButton.outlined(
       onPressed: hasValue ? onClear : null,
       tooltip: 'Limpar',
@@ -86,4 +100,19 @@ class GeneratorActions extends StatelessWidget {
       ],
     );
   }
+}
+
+/// An action that takes the place of "Copiar" in [GeneratorActions].
+class GeneratorSecondaryAction {
+  const GeneratorSecondaryAction({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+
+  /// `null` disables the button.
+  final VoidCallback? onPressed;
 }

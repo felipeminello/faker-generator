@@ -1,6 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_generator/qr_code/bloc/qr_code_bloc.dart';
+import 'package:fake_generator/qr_code/data/qr_code_download_repository.dart';
 import 'package:fake_generator/qr_code/data/qr_code_level.dart';
 import 'package:fake_generator/qr_code/data/qr_code_model.dart';
 import 'package:fake_generator/qr_code/data/qr_code_repository.dart';
@@ -11,11 +16,36 @@ class _FakeQrCodeRepository extends QrCodeRepository {
   String random() => 'https://exemplo.com.br/abc';
 }
 
+/// A save dialog the test answers: [saves] holds what was asked to be saved,
+/// and each save completes with what [answer] returns.
+class _FakeSaveDialog {
+  final saves = <({String fileName, Uint8List bytes, String mimeType})>[];
+  Future<Uri?> Function() answer = () async => Uri.file('/tmp/qrcode.png');
+
+  Future<Uri?> call({
+    required String fileName,
+    required Uint8List bytes,
+    required String mimeType,
+  }) {
+    saves.add((fileName: fileName, bytes: bytes, mimeType: mimeType));
+    return answer();
+  }
+}
+
 void main() {
   group('QrCodeBloc', () {
     final repository = _FakeQrCodeRepository();
+    late _FakeSaveDialog dialog;
 
-    QrCodeBloc build() => QrCodeBloc(repository);
+    setUp(() => dialog = _FakeSaveDialog());
+
+    QrCodeBloc build() =>
+        QrCodeBloc(repository, QrCodeDownloadRepository(saveFile: dialog.call));
+
+    QrCodeState withCode(String text) => QrCodeState(
+      text: text,
+      qrCode: repository.encode(text, QrCodeLevel.medium),
+    );
 
     test('starts empty, at level M', () {
       final bloc = build();
@@ -116,5 +146,100 @@ void main() {
       act: (bloc) => bloc.add(const QrCodeCleared()),
       expect: () => const [QrCodeState(level: QrCodeLevel.quartile)],
     );
+
+    group('download', () {
+      blocTest<QrCodeBloc, QrCodeState>(
+        'saves the code as a 512×512 PNG named qrcode.png',
+        build: build,
+        seed: () => withCode('abc'),
+        act: (bloc) => bloc.add(const QrCodeDownloadRequested()),
+        expect: () => [
+          withCode('abc').withDownload(QrCodeDownloadStatus.saving),
+          withCode('abc').withDownload(
+            QrCodeDownloadStatus.saved,
+            savedTo: Uri.file('/tmp/qrcode.png'),
+          ),
+        ],
+        verify: (_) {
+          final save = dialog.saves.single;
+          expect(save.fileName, 'qrcode.png');
+          expect(save.mimeType, 'image/png');
+          // Width and height in the IHDR chunk.
+          final header = ByteData.sublistView(save.bytes);
+          expect([header.getUint32(16), header.getUint32(20)], [512, 512]);
+        },
+      );
+
+      blocTest<QrCodeBloc, QrCodeState>(
+        'a closed dialog is a cancelled download',
+        build: build,
+        setUp: () => dialog.answer = () async => null,
+        seed: () => withCode('abc'),
+        act: (bloc) => bloc.add(const QrCodeDownloadRequested()),
+        skip: 1,
+        expect: () => [
+          withCode('abc').withDownload(QrCodeDownloadStatus.cancelled),
+        ],
+      );
+
+      blocTest<QrCodeBloc, QrCodeState>(
+        'a write error is a failed download',
+        build: build,
+        setUp: () =>
+            dialog.answer = () async => throw const FileSystemException(),
+        seed: () => withCode('abc'),
+        act: (bloc) => bloc.add(const QrCodeDownloadRequested()),
+        skip: 1,
+        expect: () => [
+          withCode('abc').withDownload(QrCodeDownloadStatus.failed),
+        ],
+      );
+
+      blocTest<QrCodeBloc, QrCodeState>(
+        'there is nothing to save without a code',
+        build: build,
+        seed: () => QrCodeState(
+          text: 'a' * 3000,
+          error: const QrCodeTooLongException(QrCodeLevel.medium),
+        ),
+        act: (bloc) => bloc.add(const QrCodeDownloadRequested()),
+        expect: () => const <QrCodeState>[],
+        verify: (_) => expect(dialog.saves, isEmpty),
+      );
+
+      blocTest<QrCodeBloc, QrCodeState>(
+        'opens a single dialog however often the button is pressed',
+        build: build,
+        setUp: () {
+          final pending = Completer<Uri?>();
+          dialog.answer = () => pending.future;
+        },
+        seed: () => withCode('abc'),
+        act: (bloc) => bloc
+          ..add(const QrCodeDownloadRequested())
+          ..add(const QrCodeDownloadRequested()),
+        verify: (bloc) {
+          expect(dialog.saves, hasLength(1));
+          expect(bloc.state.canDownload, isFalse);
+        },
+      );
+
+      blocTest<QrCodeBloc, QrCodeState>(
+        'editing the text while saving keeps the download going',
+        build: build,
+        setUp: () {
+          final pending = Completer<Uri?>();
+          dialog.answer = () => pending.future;
+        },
+        seed: () => withCode('abc'),
+        act: (bloc) => bloc
+          ..add(const QrCodeDownloadRequested())
+          ..add(const QrCodeTextChanged('abcd')),
+        verify: (bloc) {
+          expect(bloc.state.text, 'abcd');
+          expect(bloc.state.download, QrCodeDownloadStatus.saving);
+        },
+      );
+    });
   });
 }

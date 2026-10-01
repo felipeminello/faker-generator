@@ -63,11 +63,20 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   level (over 2,953 bytes at L down to 1,273 at H) is flagged instead of drawn.
   Accented text is written as UTF-8 behind an ECI header, so scanners do not
   read "ç" as "Ã§". **Gerar** makes up a sample content (link, Wi-Fi, e-mail,
-  phone or text); **Copiar** copies the text. Encoding uses the pure-Dart
-  [`qr`](https://pub.dev/packages/qr) package; drawing is a `CustomPainter`.
+  phone or text). Instead of **Copiar**, this page has **Download**: it saves
+  the code as a **512×512 PNG** (black on white, quiet zone included) through
+  the platform's "save as" dialog — a file dialog on desktop, the system
+  document picker on Android/iOS — and a snack bar says where it went.
+  Encoding uses the pure-Dart [`qr`](https://pub.dev/packages/qr) package; the
+  preview is a `CustomPainter`, and the PNG is written pixel by pixel in Dart
+  (no anti-aliasing), so it does not need the rendering engine.
 
-Each feature has an empty state, **Gerar / Gerar novo**, **Copiar**, and
-**Limpar** actions.
+  On macOS the sandbox only lets the app write where the user chose with the
+  `com.apple.security.files.user-selected.read-write` entitlement, present in
+  both `macos/Runner/DebugProfile.entitlements` and `Release.entitlements`.
+
+Each feature has an empty state, **Gerar / Gerar novo**, **Copiar** (or
+**Download**, for QR Codes), and **Limpar** actions.
 
 The layout is responsive, with a single breakpoint at 600 logical pixels
 (`lib/shared/presentation/responsive.dart`):
@@ -96,7 +105,7 @@ lib/
 ├── shared/
 │   └── presentation/
 │       ├── generator_view.dart    # Reusable result card + generate/copy/clear UI
-│       ├── generator_actions.dart # Gerar/Copiar/Limpar bar, stacked when compact
+│       ├── generator_actions.dart # Gerar/Copiar/Limpar bar (Copiar replaceable), stacked when compact
 │       ├── responsive.dart        # Compact breakpoint + page padding helpers
 │       ├── monospace.dart         # Monospace text style (passwords, cron)
 │       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar
@@ -165,7 +174,9 @@ lib/
 │   ├── data/
 │   │   ├── qr_code_level.dart     # Error correction levels L/M/Q/H + byte limits
 │   │   ├── qr_code_model.dart     # Encoded modules + QrCodeTooLongException
-│   │   └── qr_code_repository.dart # encode() (qr package, UTF-8 + ECI), random() samples
+│   │   ├── qr_code_repository.dart # encode() (qr package, UTF-8 + ECI), random() samples
+│   │   ├── qr_code_png.dart       # 512×512 PNG encoder (pure Dart: zlib + CRC32)
+│   │   └── qr_code_download_repository.dart # Saves the PNG via file_picker's "save as"
 │   └── presentation/
 │       ├── qr_code_page.dart      # Bloc wiring
 │       ├── qr_code_view.dart      # Text field, level selector, preview
@@ -217,7 +228,7 @@ test/
 ├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
 ├── password/                      # Generation, options, persisted history + PasswordBloc tests
 ├── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
-└── qr_code/                       # Encoding, level limits, samples + QrCodeBloc tests
+└── qr_code/                       # Encoding, level limits, samples, PNG output, QrCodeBloc (incl. download) tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```
@@ -349,8 +360,12 @@ The workflow reads these repository secrets:
 - `flutter_bloc` — state management (BLoC).
 - `cupertino_icons` — icons.
 - `shared_preferences` — keeps the recent passwords across restarts.
+- `qr` — QR Code encoding (pure Dart).
+- `file_picker` — the "save as" dialog used to download QR Codes as PNG.
 - `bloc_test` (dev) — Bloc unit testing.
 - `shared_preferences_platform_interface` (dev) — in-memory preferences for
   tests (`InMemorySharedPreferencesAsync`), since the plugin is not registered
   there.
+- `file_picker_platform_interface` (dev) — lets the widget tests replace the
+  native save dialog with a fake.
 - `flutter_launcher_icons` (dev) — generates the native launcher icons.

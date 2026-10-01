@@ -22,6 +22,7 @@ class QrCodeView extends StatelessWidget {
     required this.onLevelChanged,
     required this.onGenerate,
     required this.onClear,
+    required this.onDownload,
   });
 
   /// The text being encoded.
@@ -40,6 +41,10 @@ class QrCodeView extends StatelessWidget {
   final ValueChanged<QrCodeLevel> onLevelChanged;
   final VoidCallback onGenerate;
   final VoidCallback onClear;
+
+  /// Saves the code as a PNG; `null` while there is nothing to save (or a
+  /// save is under way).
+  final VoidCallback? onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +84,8 @@ class QrCodeView extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         'Escreva um texto ou link e o QR Code aparece na '
-                        'hora. "Gerar" cria um conteúdo de exemplo.',
+                        'hora. "Gerar" cria um conteúdo de exemplo e "Download" salva '
+                        'a imagem em PNG (512×512).',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -103,6 +109,11 @@ class QrCodeView extends StatelessWidget {
                 onGenerate: onGenerate,
                 onClear: onClear,
                 regenerateLabel: 'Gerar outro',
+                secondaryAction: GeneratorSecondaryAction(
+                  label: 'Download',
+                  icon: Icons.download,
+                  onPressed: onDownload,
+                ),
               ),
             ],
           ),

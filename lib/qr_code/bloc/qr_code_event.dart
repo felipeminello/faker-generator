@@ -24,6 +24,11 @@ class QrCodeRequested extends QrCodeEvent {
   const QrCodeRequested();
 }
 
+/// Saves the code on screen as a PNG, asking the user where.
+class QrCodeDownloadRequested extends QrCodeEvent {
+  const QrCodeDownloadRequested();
+}
+
 /// Clears the text, keeping the level.
 class QrCodeCleared extends QrCodeEvent {
   const QrCodeCleared();
