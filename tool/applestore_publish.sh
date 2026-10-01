@@ -19,12 +19,15 @@
 #   -y, --yes            não pede confirmação antes de gerar e enviar
 #   -h, --help           mostra esta ajuda
 #
-# A versão vem do pubspec.yaml (version: NOME+NÚMERO): o NOME vira o
-# CFBundleShortVersionString e o NÚMERO, o CFBundleVersion. A Apple não aceita
-# builds de um NOME que já foi aprovado e recusa um NÚMERO repetido — no iOS,
-# dentro do mesmo NOME; no macOS, o NÚMERO precisa ser maior que o de todo
-# build já enviado. Suba o número depois do + antes de cada envio, e o NOME
-# depois de cada versão publicada.
+# A versão vem do pubspec.yaml (version: NOME ou NOME+NÚMERO): o NOME vira o
+# CFBundleShortVersionString e o NÚMERO, o CFBundleVersion; sem o +NÚMERO, o
+# Flutter repete o NOME no CFBundleVersion. A Apple não aceita builds de um
+# NOME que já foi aprovado e recusa um CFBundleVersion repetido — no iOS,
+# dentro do mesmo NOME; no macOS, ele precisa ser maior que o de todo build já
+# enviado, comparado parte por parte (1 < 1.2.0 < 1.10 < 3). Sem o +NÚMERO,
+# então, cada NOME sobe uma vez só: para mandar outro build da mesma versão,
+# acrescente +NÚMERO (ou suba o que já estiver lá). Suba o NOME depois de cada
+# versão publicada.
 #
 # Só roda no macOS, com Xcode. Precisa do Team escolhido na configuração
 # Release do projeto, de ITSAppUsesNonExemptEncryption no Info.plist (e, no
@@ -119,6 +122,16 @@ in_list() {
   local item
   for item in $2; do [ "$item" = "$1" ] && return 0; done
   return 1
+}
+
+# Compara números de build como a Apple: parte por parte, com as que faltam
+# valendo 0 (1 < 1.2.0 < 1.10 < 3).
+build_gt() {
+  awk -v a="$1" -v b="$2" 'BEGIN {
+    split(a, x, "."); split(b, y, ".")
+    for (i = 1; i <= 3; i++) if (x[i] + 0 != y[i] + 0) exit !(x[i] + 0 > y[i] + 0)
+    exit 1
+  }'
 }
 
 # Base64 sem padding e com o alfabeto de URL, como o JWT pede.
@@ -306,13 +319,21 @@ openssl pkey -in "$key_path" -noout 2>/dev/null ||
   die "$key_path não é uma chave .p8 da API do App Store Connect"
 
 version=$(sed -n 's/^version:[[:space:]]*//p' "$ROOT/pubspec.yaml" | tr -d "[:space:]\"'")
+[ -n "$version" ] || die "o pubspec.yaml não tem a linha version: NOME ou NOME+NÚMERO"
 version_name=${version%%+*}
-version_code=${version#*+}
-case $version_code in
-  '' | *[!0-9]*) die "o pubspec.yaml precisa de version: NOME+NÚMERO (está '$version')" ;;
-esac
 [[ $version_name =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] ||
   die "a Apple só aceita um NOME de até três números, como 1.2.3 (o pubspec.yaml tem '$version_name')"
+# Sem o +NÚMERO, o Flutter repete o NOME no CFBundleVersion.
+if [[ $version == *+* ]]; then
+  version_code=${version#*+}
+  case $version_code in
+    '' | *[!0-9]*) die "o NÚMERO depois do + no pubspec.yaml precisa ser um inteiro (está '$version')" ;;
+  esac
+  bump_hint="suba o número depois do + no pubspec.yaml"
+else
+  version_code=$version_name
+  bump_hint="acrescente +NÚMERO à versão no pubspec.yaml ou suba o NOME"
+fi
 
 if [ "$build" = true ]; then
   command -v flutter >/dev/null || die "flutter não está no PATH"
@@ -359,15 +380,15 @@ used_codes=$(api GET /builds -G "${build_filters[@]}" \
   --data-urlencode 'fields[builds]=version' \
   --data-urlencode 'sort=-uploadedDate' \
   --data-urlencode 'limit=200' | jq -r '.data[].attributes.version')
-last_code=$(sort -n <<<"$used_codes" | tail -n 1)
+last_code=$(sort -t. -k1,1n -k2,2n -k3,3n <<<"$used_codes" | tail -n 1)
 if [ "$platform" = macos ]; then
   last_label="o último build no macOS é o ($last_code)"
-  [ -z "$last_code" ] || [ "$version_code" -gt "$last_code" ] ||
-    die "no macOS o número precisa ser maior que o de todo build já enviado (o último é $last_code) — suba o número depois do + no pubspec.yaml"
+  [ -z "$last_code" ] || build_gt "$version_code" "$last_code" ||
+    die "no macOS o número do build ($version_code) precisa ser maior que o de todo build já enviado (o último é $last_code) — $bump_hint"
 else
   last_label="o último build da $version_name é o ($last_code)"
-  if grep -qx "$version_code" <<<"$used_codes"; then
-    die "o número $version_code já foi usado na versão $version_name (o último enviado é $last_code) — suba o número depois do + no pubspec.yaml"
+  if grep -qxF "$version_code" <<<"$used_codes"; then
+    die "o número $version_code já foi usado na versão $version_name (o último enviado é $last_code) — $bump_hint"
   fi
 fi
 [ -n "$last_code" ] || last_label="primeiro build da $version_name no $PLATFORM_LABEL"
