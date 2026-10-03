@@ -213,7 +213,13 @@ tool/
 ├── generate_icon.py               # Draws every icon source; also writes the .ico and Linux icons
 ├── playstore_publish.sh           # Builds the AAB and publishes it to a Google Play track
 ├── applestore_publish.sh          # Builds the iOS IPA or macOS .pkg and sends it to TestFlight / App Store review
-└── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
+├── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
+└── store_media/                   # App Store screenshots (see "App Store screenshots")
+    ├── capture.py                 # Runs the scenes on a simulator or the Mac and saves the raw captures
+    └── compose.py                 # Frames + captions → 1284×2778, 2064×2752 and 2880×1800 PNGs
+
+integration_test/
+└── store_media_test.dart          # Scripted scenes for the screenshots, read by capture.py
 
 .github/workflows/
 └── release.yml                    # Tag v*.*.* → macOS/Windows/Linux builds on a GitHub Release
@@ -311,6 +317,32 @@ changing CMake settings, run `flutter clean` first, and close any running copy o
 the app — a running instance locks `flutter_windows.dll` and the build fails on
 the install step with `Permission denied`.
 
+## App Store screenshots
+
+The screenshots are produced by code, like the icon. A scripted integration
+test ([integration_test/store_media_test.dart](integration_test/store_media_test.dart))
+opens each feature and fills it in; [tool/store_media/capture.py](tool/store_media/capture.py)
+runs it and grabs a screenshot at every `@@SHOT` marker the test prints;
+[tool/store_media/compose.py](tool/store_media/compose.py) puts each capture in
+a device frame (or a macOS window) over the icon's violet, under a caption.
+
+```bash
+xcrun simctl list devices available            # pick the simulators' UDIDs
+xcrun simctl boot <udid>
+python3 tool/store_media/capture.py <iphone udid> iphone   # e.g. iPhone 18 Pro Max
+python3 tool/store_media/capture.py <ipad udid> ipad       # iPad Pro 13-inch: the handle box in compose.py assumes 2064×2752
+python3 tool/store_media/capture.py mac                    # draws a 1040×680 @2x window off screen
+python3 tool/store_media/compose.py                        # every device captured
+```
+
+Both scripts need Python 3 with `pillow`; `compose.py` uses the system's SF
+Pro, so it runs on macOS. The raw captures go to `build/store_media/<device>/`
+and the final PNGs to `build/store_media/out/` (`ios-1284x2778/`,
+`ipad-2064x2752/`, `macos-2880x1800/`) — outside git, so upload them to App
+Store Connect from there. Captions are in `SCREENSHOTS` in `compose.py`; scenes
+in the `screenshots` test. `capture.py` also accepts a comma-separated list of
+scenes as its last argument.
+
 ## Releases
 
 [.github/workflows/release.yml](.github/workflows/release.yml) builds the desktop
@@ -369,3 +401,5 @@ The workflow reads these repository secrets:
 - `file_picker_platform_interface` (dev) — lets the widget tests replace the
   native save dialog with a fake.
 - `flutter_launcher_icons` (dev) — generates the native launcher icons.
+- `integration_test` (dev, SDK) — runs the App Store screenshot scenes on a
+  simulator or the Mac.
