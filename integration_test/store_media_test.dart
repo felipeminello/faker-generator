@@ -10,11 +10,14 @@ import 'dart:ui' as ui;
 
 import 'package:fake_generator/cnpj/bloc/cnpj_bloc.dart';
 import 'package:fake_generator/cnpj/data/cnpj_kind.dart';
+import 'package:fake_generator/cnpj/data/cnpj_repository.dart';
 import 'package:fake_generator/cpf/bloc/cpf_bloc.dart';
 import 'package:fake_generator/cpf/data/uf.dart';
 import 'package:fake_generator/cron/bloc/cron_bloc.dart';
 import 'package:fake_generator/home/presentation/home_page.dart';
 import 'package:fake_generator/main.dart';
+import 'package:fake_generator/qr_code/bloc/qr_code_bloc.dart';
+import 'package:fake_generator/validator/bloc/validator_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,9 +51,16 @@ void main() {
   scene('screenshots', (d) async {
     await d.start();
 
+    // O seletor de estado aberto, antes de gerar: depois, a página rola até
+    // a lista e o seletor sai de vista.
     d.bloc<CpfBloc>()
       ..add(const CpfCountChanged(10))
       ..add(const CpfUfChanged(Uf.sp));
+    await d.pause(500);
+    await d.tap(find.text('SP · São Paulo'));
+    await d.shot('02_cpf_estado');
+    await d.tap(find.text('SP · São Paulo').last);
+
     await d.tap(find.text('Gerar'));
     await d.shot('01_cpf');
 
@@ -59,20 +69,51 @@ void main() {
       ..add(const CnpjKindChanged(CnpjKind.alphanumeric))
       ..add(const CnpjCountChanged(10));
     await d.tap(find.text('Gerar'));
-    await d.shot('02_cnpj');
+    await d.shot('03_cnpj');
+
+    await d.tap(find.text('Exportar'));
+    await d.shot('04_exportar');
+    await d.tap(find.text('Exportar'));
 
     await d.open('Validar');
     await d.tap(find.text('Ver exemplo'));
-    await d.shot('03_validar');
+    await d.shot('05_validar');
+
+    d.bloc<ValidatorBloc>().add(ValidatorTextChanged(_pastedJson()));
+    await d.shot('06_validar_lista');
 
     await d.open('Cron');
     d.bloc<CronBloc>().add(const CronExpressionChanged('*/15 9-17 * * 1-5'));
-    await d.shot('04_cron');
+    await d.shot('07_cron');
 
     await d.open('UUID v4');
     await d.tap(find.text('Gerar'));
-    await d.shot('05_uuid');
+    await d.shot('08_uuid');
+
+    await d.open('Lorem');
+    await d.tap(find.text('Gerar'));
+    await d.shot('09_lorem');
+
+    await d.open('QR Code');
+    d.bloc<QrCodeBloc>().add(const QrCodeTextChanged('https://minello.dev.br'));
+    await d.shot('10_qr_code');
   });
+}
+
+/// Uma lista JSON como a que se cola de uma fixture: CNPJs alfanuméricos
+/// válidos, um numérico e, em segundo, um com o dígito verificador errado.
+String _pastedJson() {
+  final cnpjs = CnpjRepository(
+    random: Random(2026),
+  ).generateMany(3, kind: CnpjKind.alphanumeric, headOffice: false);
+  final typo = cnpjs[1].formatted;
+  final wrongDigit = (int.parse(typo[typo.length - 1]) + 1) % 10;
+  return const JsonEncoder.withIndent('  ').convert([
+    cnpjs[0].formatted,
+    '${typo.substring(0, typo.length - 1)}$wrongDigit',
+    '11.222.333/0001-81',
+    cnpjs[2].formatted,
+  ]);
 }
 
 /// Interações roteirizadas e os marcadores que o script de captura lê.

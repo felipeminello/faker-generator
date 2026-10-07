@@ -1,9 +1,10 @@
 """Turns what capture.py saved in build/store_media/<device>/ into App Store
-screenshots, in build/store_media/out/ (outside git, like the rest of build/):
+screenshots, in assets/store_media/ (ignored by git, and not bundled in the
+app):
 
-- ios-1284x2778/: 1284 × 2778 PNGs (RGB), with a caption and a device frame;
-- ipad-2064x2752/: 2064 × 2752 PNGs, the same way;
-- macos-2880x1800/: 2880 × 1800 PNGs, with the app in a window.
+- iphone/: 1284 × 2778 PNGs (RGB), with a caption and a device frame;
+- ipad/: 2064 × 2752 PNGs, the same way;
+- mac/: 2880 × 1800 PNGs, with the app in a window.
 
 Needs Pillow: python tool/store_media/compose.py [iphone|ipad|mac ...]
 (every device that was captured, by default).
@@ -17,7 +18,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'build' / 'store_media'
-OUT = SOURCE / 'out'
+OUT = ROOT / 'assets' / 'store_media'
 
 FONT = '/System/Library/Fonts/SFNS.ttf'
 
@@ -26,7 +27,6 @@ FONT = '/System/Library/Fonts/SFNS.ttf'
 class Device:
     key: str
     name: str
-    folder: str
     size: tuple
     screen_width: int
     bezel: int
@@ -44,28 +44,38 @@ MAC_SIZE = (2880, 1800)
 MAC_TITLE_BAR = 56
 
 DEVICES = {
-    'iphone': Device('iphone', 'iPhone', 'ios-1284x2778', (1284, 2778),
+    'iphone': Device('iphone', 'iPhone', (1284, 2778),
                      screen_width=924, bezel=26, title_size=104,
                      subtitle_size=50, bottom_margin=110),
-    'ipad': Device('ipad', 'iPad', 'ipad-2064x2752', (2064, 2752),
+    'ipad': Device('ipad', 'iPad', (2064, 2752),
                    screen_width=1440, bezel=38, title_size=140,
                    subtitle_size=66, bottom_margin=120,
                    handle=(2004, 2692, 2058, 2748),
-                   handle_reference='05_uuid'),
+                   handle_reference='08_uuid'),
 }
 
 # In App Store order: captured screen, headline, subtitle.
 SCREENSHOTS = [
     ('01_cpf', 'CPF válido\npara seus testes',
-     'Em lote, por estado, exportado em CSV ou JSON'),
-    ('02_cnpj', 'CNPJ numérico\ne alfanumérico',
+     'Em lote, sem repetição, prontos para copiar'),
+    ('02_cpf_estado', 'CPF do estado\nque você escolher',
+     'O 9º dígito segue a região fiscal'),
+    ('03_cnpj', 'CNPJ numérico\ne alfanumérico',
      'O novo formato da Receita Federal'),
-    ('03_validar', 'Valide listas\nde CPF e CNPJ',
+    ('04_exportar', 'Exporte em CSV,\nJSON ou TXT',
+     'Para planilhas, fixtures e mocks'),
+    ('05_validar', 'Valide CPF\ne CNPJ',
      'Aponta o erro e mostra o valor certo'),
-    ('04_cron', 'Cron explicado\nem português',
+    ('06_validar_lista', 'Cole a planilha\nou o JSON',
+     'Cada linha conferida na hora'),
+    ('07_cron', 'Cron explicado\nem português',
      'E as próximas execuções, enquanto digita'),
-    ('05_uuid', 'UUID v4\nem um toque',
+    ('08_uuid', 'UUID v4\nem um toque',
      'Identificadores aleatórios, prontos para copiar'),
+    ('09_lorem', 'Texto de exemplo\npara layouts',
+     'Lorem Ipsum em parágrafos, palavras ou listas'),
+    ('10_qr_code', 'QR Code para\ntestar leitores',
+     'Link, Wi-Fi, e-mail ou telefone, salvo em PNG'),
 ]
 
 # The icon's violet.
@@ -261,20 +271,20 @@ def mac_screenshot(screen, headline, subtitle):
 
 
 def compose_mac():
-    out = OUT / 'macos-2880x1800'
+    out = OUT / 'mac'
     out.mkdir(parents=True, exist_ok=True)
     for name, headline, subtitle in SCREENSHOTS:
         screen = Image.open(SOURCE / 'mac' / 'raw' / f'{name}.png')
         mac_screenshot(screen.convert('RGB'), headline.replace('\n', ' '),
                        subtitle).save(out / f'{name}.png')
-        print(f'macos-2880x1800/{name}.png')
+        print(f'mac/{name}.png')
 
 
 def compose(key):
     if key == 'mac':
         return compose_mac()
     device = DEVICES[key]
-    out = OUT / device.folder
+    out = OUT / device.key
     out.mkdir(parents=True, exist_ok=True)
     handle = handle_pixels(device) if device.handle else None
 
@@ -282,7 +292,7 @@ def compose(key):
         screen, mask = load_screen(device, name, handle)
         screenshot(device, screen, mask, headline, subtitle).save(
             out / f'{name}.png')
-        print(f'{device.folder}/{name}.png')
+        print(f'{device.key}/{name}.png')
 
 
 def main():

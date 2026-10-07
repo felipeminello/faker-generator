@@ -286,7 +286,7 @@ tool/
 ├── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
 └── store_media/                   # App Store screenshots (see "App Store screenshots")
     ├── capture.py                 # Runs the scenes on a simulator or the Mac and saves the raw captures
-    └── compose.py                 # Frames + captions → 1284×2778, 2064×2752 and 2880×1800 PNGs
+    └── compose.py                 # Frames + captions → assets/store_media/{iphone,ipad,mac} (git-ignored)
 
 integration_test/
 └── store_media_test.dart          # Scripted scenes for the screenshots, read by capture.py
@@ -409,11 +409,17 @@ python3 tool/store_media/capture.py mac                    # draws a 1040×680 @
 python3 tool/store_media/compose.py                        # every device captured
 ```
 
-Both scripts need Python 3 with `pillow`; `compose.py` uses the system's SF
-Pro, so it runs on macOS. The raw captures go to `build/store_media/<device>/`
-and the final PNGs to `build/store_media/out/` (`ios-1284x2778/`,
-`ipad-2064x2752/`, `macos-2880x1800/`) — outside git, so upload them to App
-Store Connect from there. Captions are in `SCREENSHOTS` in `compose.py`; scenes
+`compose.py` needs Python 3 with `pillow` (a throwaway venv is enough:
+`python3 -m venv /tmp/sm && /tmp/sm/bin/pip install pillow`, then run it with
+`/tmp/sm/bin/python`); it uses the system's SF Pro, so it runs on macOS. The
+raw captures go to `build/store_media/<device>/` and the final PNGs to
+`assets/store_media/` — `iphone/` (1284 × 2778), `ipad/` (2064 × 2752) and
+`mac/` (2880 × 1800, the app in a window over the icon's violet) — which
+`.gitignore` leaves out and `pubspec.yaml` does not bundle, so upload them to
+App Store Connect from there. There are 10 scenes, the most the App Store
+shows: six for the documents (CPF list, state picker, alphanumeric CNPJ,
+export menu, validator, pasted JSON), then cron, UUID, Lorem Ipsum and QR
+Code. Captions are in `SCREENSHOTS` in `compose.py`; scenes
 in the `screenshots` test. `capture.py` also accepts a comma-separated list of
 scenes as its last argument.
 
