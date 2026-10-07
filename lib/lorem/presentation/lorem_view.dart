@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../shared/presentation/count_field.dart';
 import '../../shared/presentation/generator_actions.dart';
 import '../../shared/presentation/responsive.dart';
 import '../data/lorem_model.dart';
@@ -179,7 +179,13 @@ class _Options extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _CountField(unit: unit, count: count, onChanged: onCountChanged),
+            CountField(
+              label: 'Quantidade de ${unit.hint}',
+              count: count,
+              min: unit.min,
+              max: unit.max,
+              onChanged: onCountChanged,
+            ),
             const SizedBox(height: 4),
             SwitchListTile(
               value: startWithLorem,
@@ -190,89 +196,6 @@ class _Options extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Numeric amount field, kept in sync with the amount held by the Bloc.
-class _CountField extends StatefulWidget {
-  const _CountField({
-    required this.unit,
-    required this.count,
-    required this.onChanged,
-  });
-
-  final LoremUnit unit;
-  final int count;
-  final ValueChanged<int> onChanged;
-
-  @override
-  State<_CountField> createState() => _CountFieldState();
-}
-
-class _CountFieldState extends State<_CountField> {
-  late final TextEditingController _controller = TextEditingController(
-    text: '${widget.count}',
-  );
-
-  @override
-  void didUpdateWidget(_CountField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // The Bloc clamps the amount and resets it on unit changes; mirror that
-    // here without fighting the user while they are typing.
-    if (widget.count != int.tryParse(_controller.text)) {
-      _controller.text = '${widget.count}';
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _step(int delta) {
-    final next = widget.unit.clampCount(widget.count + delta);
-    _controller.text = '$next';
-    widget.onChanged(next);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final unit = widget.unit;
-
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: 'Quantidade de ${unit.hint}',
-              helperText: 'de ${unit.min} a ${unit.max}',
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
-            onChanged: (value) {
-              final parsed = int.tryParse(value);
-              if (parsed != null) widget.onChanged(parsed);
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        IconButton.outlined(
-          onPressed: widget.count > unit.min ? () => _step(-1) : null,
-          tooltip: 'Diminuir',
-          icon: const Icon(Icons.remove),
-        ),
-        const SizedBox(width: 8),
-        IconButton.outlined(
-          onPressed: widget.count < unit.max ? () => _step(1) : null,
-          tooltip: 'Aumentar',
-          icon: const Icon(Icons.add),
-        ),
-      ],
     );
   }
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Assina o Fake Generator.app com o Developer ID, notariza na Apple e gera o zip
+# Assina o Massa de Teste.app com o Developer ID, notariza na Apple e gera o zip
 # para distribuir fora da App Store. Sem isso o macOS bloqueia o app baixado com
-# "A Apple não pôde verificar se o item Fake Generator está livre de malware".
+# "A Apple não pôde verificar se o item Massa de Teste está livre de malware".
 #
 # Uso:
-#   ASC_ISSUER_ID=<issuer> ASC_KEY_ID=<key> TEAM_ID=<team> tool/notarize.sh [--app caminho/Fake\ Generator.app] [--zip saida.zip]
+#   ASC_ISSUER_ID=<issuer> ASC_KEY_ID=<key> TEAM_ID=<team> tool/notarize.sh [--app caminho/Massa\ de\ Teste.app] [--zip saida.zip]
 #
 # Rode depois de `flutter build macos --release`. Precisa do certificado
 # "Developer ID Application" do time em algum keychain da lista de busca.
@@ -19,7 +19,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-app="build/macos/Build/Products/Release/Fake Generator.app"
+app="build/macos/Build/Products/Release/Massa de Teste.app"
 zip=build/macos/FakeGenerator-macos.zip
 while [[ $# -gt 0 ]]; do
   case $1 in

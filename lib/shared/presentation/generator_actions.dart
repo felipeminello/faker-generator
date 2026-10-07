@@ -6,7 +6,9 @@ import 'responsive.dart';
 /// "Gerar / Copiar / Limpar" action bar shared by every generator feature.
 ///
 /// A feature whose result is not text can swap "Copiar" for another
-/// [secondaryAction] (the QR Code page downloads an image instead).
+/// [secondaryAction] (the QR Code page downloads an image instead), and one
+/// can add an [extraAction] next to it (the CPF and CNPJ lists are exported
+/// there).
 ///
 /// On wide windows the three actions sit side by side; on phones they stack,
 /// so the generate button keeps its full width instead of being squeezed
@@ -21,6 +23,7 @@ class GeneratorActions extends StatelessWidget {
     this.regenerateLabel = 'Gerar novo',
     this.onCopied,
     this.secondaryAction,
+    this.extraAction,
   });
 
   /// The currently generated value, or `null` when there is nothing to copy.
@@ -40,6 +43,9 @@ class GeneratorActions extends StatelessWidget {
 
   /// Shown instead of the copy button when set.
   final GeneratorSecondaryAction? secondaryAction;
+
+  /// Shown between the copy (or [secondaryAction]) button and the clear one.
+  final Widget? extraAction;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +88,10 @@ class GeneratorActions extends StatelessWidget {
           Row(
             children: [
               Expanded(child: SizedBox(height: 48, child: copy)),
+              if (extraAction case final extra?) ...[
+                const SizedBox(width: 12),
+                Expanded(child: SizedBox(height: 48, child: extra)),
+              ],
               const SizedBox(width: 12),
               clear,
             ],
@@ -95,6 +105,10 @@ class GeneratorActions extends StatelessWidget {
         Expanded(child: generate),
         const SizedBox(width: 12),
         copy,
+        if (extraAction case final extra?) ...[
+          const SizedBox(width: 12),
+          extra,
+        ],
         const SizedBox(width: 12),
         clear,
       ],

@@ -51,25 +51,21 @@ DEVICES = {
                    screen_width=1440, bezel=38, title_size=140,
                    subtitle_size=66, bottom_margin=120,
                    handle=(2004, 2692, 2058, 2748),
-                   handle_reference='01_uuid'),
+                   handle_reference='05_uuid'),
 }
 
 # In App Store order: captured screen, headline, subtitle.
 SCREENSHOTS = [
-    ('01_uuid', 'UUID v4\nem um toque',
-     'Identificadores aleatórios, prontos para copiar'),
-    ('02_cpf', 'CPF válido\npara seus testes',
-     'Com os dígitos verificadores corretos'),
-    ('03_cnpj', 'CNPJ formatado\ne válido',
-     'Pronto para colar no formulário'),
-    ('04_lorem', 'Lorem Ipsum\ndo seu jeito',
-     'Parágrafos, palavras, letras ou listas'),
-    ('05_senha', 'Senhas fortes\nsob medida',
-     'Escolha o tamanho e os caracteres'),
-    ('06_cron', 'Cron explicado\nem português',
+    ('01_cpf', 'CPF válido\npara seus testes',
+     'Em lote, por estado, exportado em CSV ou JSON'),
+    ('02_cnpj', 'CNPJ numérico\ne alfanumérico',
+     'O novo formato da Receita Federal'),
+    ('03_validar', 'Valide listas\nde CPF e CNPJ',
+     'Aponta o erro e mostra o valor certo'),
+    ('04_cron', 'Cron explicado\nem português',
      'E as próximas execuções, enquanto digita'),
-    ('07_qr_code', 'QR Code\nenquanto você digita',
-     'Links, Wi-Fi, e-mail ou telefone'),
+    ('05_uuid', 'UUID v4\nem um toque',
+     'Identificadores aleatórios, prontos para copiar'),
 ]
 
 # The icon's violet.
@@ -228,7 +224,7 @@ def mac_window(screen):
         draw.ellipse((x - 13, MAC_TITLE_BAR // 2 - 13,
                       x + 13, MAC_TITLE_BAR // 2 + 13), fill=color)
     title = font(26, 600, 28)
-    draw.text((width // 2, MAC_TITLE_BAR // 2), 'Fake Generator',
+    draw.text((width // 2, MAC_TITLE_BAR // 2), 'Massa de Teste',
               font=title, fill=text, anchor='mm')
     window.paste(screen.convert('RGBA'), (0, MAC_TITLE_BAR))
     mask = Image.new('L', window.size, 0)

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'feature_header.dart';
 import 'generator_actions.dart';
 import 'responsive.dart';
+import 'value_list_card.dart';
 
-/// Reusable presentation widget shared by every generator feature
-/// (UUID, CPF, CNPJ).
+/// Reusable presentation widget for a generator that makes one value at a
+/// time (UUID); `ListGeneratorView` is its counterpart for lists.
 ///
 /// It is intentionally free of business logic: pages wire a Bloc to it by
 /// passing the current [value] plus the [onGenerate]/[onClear] callbacks.
@@ -43,7 +45,7 @@ class GeneratorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final value = this.value;
 
     return Center(
       child: ConstrainedBox(
@@ -54,24 +56,9 @@ class GeneratorView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Icon(icon, size: 32, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(title, style: theme.textTheme.headlineSmall),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              FeatureHeader(icon: icon, title: title, description: description),
               const SizedBox(height: 24),
-              _ResultCard(value: value),
+              ValueListCard(values: [?value]),
               const SizedBox(height: 24),
               GeneratorActions(
                 value: value,
@@ -82,59 +69,6 @@ class GeneratorView extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.value});
-
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final compact = isCompact(context);
-    final valueStyle =
-        (compact ? theme.textTheme.titleMedium : theme.textTheme.headlineSmall)
-            ?.copyWith(
-              fontFamily: 'monospace',
-              fontFeatures: const [FontFeature.tabularFigures()],
-            );
-
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 96),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 16 : 24,
-        vertical: compact ? 20 : 28,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Center(
-        child: value == null
-            ? Text(
-                'Nenhum valor gerado ainda',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            // A UUID is 36 characters wide: on a phone it would overflow the
-            // card, so the text shrinks instead of wrapping mid-value.
-            : FittedBox(
-                fit: BoxFit.scaleDown,
-                child: SelectableText(
-                  value!,
-                  textAlign: TextAlign.center,
-                  style: valueStyle,
-                ),
-              ),
       ),
     );
   }

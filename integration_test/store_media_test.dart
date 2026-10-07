@@ -8,10 +8,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:fake_generator/cnpj/bloc/cnpj_bloc.dart';
+import 'package:fake_generator/cnpj/data/cnpj_kind.dart';
+import 'package:fake_generator/cpf/bloc/cpf_bloc.dart';
+import 'package:fake_generator/cpf/data/uf.dart';
 import 'package:fake_generator/cron/bloc/cron_bloc.dart';
 import 'package:fake_generator/home/presentation/home_page.dart';
 import 'package:fake_generator/main.dart';
-import 'package:fake_generator/qr_code/bloc/qr_code_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,34 +48,30 @@ void main() {
   scene('screenshots', (d) async {
     await d.start();
 
+    d.bloc<CpfBloc>()
+      ..add(const CpfCountChanged(10))
+      ..add(const CpfUfChanged(Uf.sp));
     await d.tap(find.text('Gerar'));
-    await d.shot('01_uuid');
+    await d.shot('01_cpf');
 
-    await d.tap(find.text('CPF'));
+    await d.open('CNPJ');
+    d.bloc<CnpjBloc>()
+      ..add(const CnpjKindChanged(CnpjKind.alphanumeric))
+      ..add(const CnpjCountChanged(10));
     await d.tap(find.text('Gerar'));
-    await d.shot('02_cpf');
+    await d.shot('02_cnpj');
 
-    await d.tap(find.text('CNPJ'));
-    await d.tap(find.text('Gerar'));
-    await d.shot('03_cnpj');
+    await d.open('Validar');
+    await d.tap(find.text('Ver exemplo'));
+    await d.shot('03_validar');
 
-    await d.tap(find.text('Lorem'));
-    await d.tap(find.text('Gerar'));
-    await d.shot('04_lorem');
-
-    await d.tap(find.text('Senha'));
-    await d.tap(find.text('Gerar'));
-    await d.shot('05_senha');
-
-    await d.tap(find.text('Cron'));
+    await d.open('Cron');
     d.bloc<CronBloc>().add(const CronExpressionChanged('*/15 9-17 * * 1-5'));
-    await d.shot('06_cron');
+    await d.shot('04_cron');
 
-    await d.tap(find.text('QR Code'));
-    d.bloc<QrCodeBloc>().add(
-      const QrCodeTextChanged('https://minello.dev.br'),
-    );
-    await d.shot('07_qr_code');
+    await d.open('UUID v4');
+    await d.tap(find.text('Gerar'));
+    await d.shot('05_uuid');
   });
 }
 
@@ -104,6 +103,30 @@ class _Director {
   /// teclado na tela.
   T bloc<T extends BlocBase<Object?>>() =>
       tester.element(find.byType(HomePage)).read<T>();
+
+  /// Abre uma ferramenta: pela barra de baixo ou pelo "Mais", no iPhone;
+  /// pelo painel lateral, no iPad e no Mac.
+  Future<void> open(String tool) async {
+    final bar = find.byType(NavigationBar);
+    if (!tester.any(bar)) {
+      await tap(
+        find.descendant(
+          of: find.byType(NavigationDrawer),
+          matching: find.text(tool),
+        ),
+      );
+      return;
+    }
+    final inBar = find.descendant(of: bar, matching: find.text(tool));
+    if (tester.any(inBar)) {
+      await tap(inBar);
+      return;
+    }
+    await tap(find.text('Mais'));
+    await tap(
+      find.descendant(of: find.byType(BottomSheet), matching: find.text(tool)),
+    );
+  }
 
   Future<void> pause(int ms) async {
     await tester.pump();

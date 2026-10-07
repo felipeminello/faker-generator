@@ -1,19 +1,62 @@
-# Fake Generator
+# Massa de Teste
 
-A Flutter app that generates **UUID v4**, **CPF**, **CNPJ**, **Lorem Ipsum**
-placeholder text, **passwords** and **QR Codes**, and edits **cron**
-expressions, with one-click copy to the clipboard. CPF and CNPJ are generated with valid check
-digits.
+Test data for Brazilian developers and QA: a Flutter app that generates and
+validates **CPF** and **CNPJ** numbers — including the new **alphanumeric
+CNPJ** — one at a time or in lists exported as CSV, JSON or TXT. It also
+generates **UUID v4**s, explains **cron** expressions in Portuguese, and has
+**Lorem Ipsum**, **password** and **QR Code** generators. Everything runs
+offline, with one-click copy to the clipboard.
+
+The app was called "Fake Generator" until version 1.2; the Dart package and the
+application id still carry that name (see "Where the app name lives").
 
 Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
 ## Features
 
+The tools are grouped as **Documentos** (CPF, CNPJ, Validar),
+**Desenvolvimento** (UUID v4, Cron) and **Outras ferramentas** (Lorem, Senha,
+QR Code).
+
+- **CPF** — valid Cadastro de Pessoa Física numbers (`Random.secure()`),
+  formatted `XXX.XXX.XXX-XX` or as 11 bare digits (**Com pontuação**). Generate
+  **1 to 1000** at a time, all distinct; numbers made of one repeated digit
+  (`111.111.111-11`) are never produced. **Estado de emissão** picks a unit of
+  the federation: the CPF's 9th digit is then its Receita Federal fiscal
+  region (8 for SP, 7 for ES/RJ...). A list shows numbered rows — tap one to
+  copy it — while **Copiar** copies them all, one per line, and **Exportar**
+  saves them as **CSV** (one `cpf` column), **JSON** (an array of strings) or
+  **TXT** (one per line) through the platform's "save as" dialog, like the QR
+  Code download. Changing the amount or the state regenerates what is on
+  screen; the punctuation only changes how it is shown.
+- **CNPJ** — valid Cadastro Nacional da Pessoa Jurídica numbers, formatted
+  `XX.XXX.XXX/XXXX-XX`, in either format:
+  - **Numérico**, the classic 14 digits;
+  - **Alfanumérico**, issued since July 2026 (IN RFB 2.229/2024): the first 12
+    characters may be uppercase letters too, the 2 check digits stay numeric,
+    and every character counts as its ASCII code minus 48 in the modulus 11
+    check (`12.ABC.345/01DE-35` is the Receita Federal's example). Generated
+    ones always hold at least one letter.
+
+  **Matriz** keeps the head-office order number `0001`; off, the CNPJs are
+  branches with a random order number. Amount, punctuation, copy and export
+  work as on the CPF page (the CSV column is `cnpj`).
+- **Validar** — paste or type CPFs and CNPJs, one per line, with or without
+  punctuation; each one is told apart by its length (11 or 14 characters) and
+  checked as you type. Lines pasted from a CSV or a JSON array work as they
+  are: quotes, commas and brackets around the value, `cpf`/`cnpj` headers and
+  bracket-only lines are skipped. Each verdict says what the document is
+  (fiscal region of a CPF; format, head office or branch, and root of a CNPJ)
+  or what is wrong: the wrong check digits, with the right ones; a single
+  repeated digit; characters the document cannot have (letters in a CPF or in
+  the check digits); a length that fits neither. A digits-only value one or
+  two short that becomes valid with leading zeros — the ones spreadsheets drop
+  — gets that as a suggestion. Each valid or corrected value has its own copy
+  button. **Colar** replaces the text with the clipboard, **Ver exemplo**
+  fills in one value of each kind, and a summary counts the valid and invalid
+  ones.
 - **UUID v4** — random RFC 4122 version-4 identifiers (generated with
   `Random.secure()`).
-- **CPF** — valid Cadastro de Pessoa Física numbers, formatted `XXX.XXX.XXX-XX`.
-- **CNPJ** — valid Cadastro Nacional da Pessoa Jurídica numbers, formatted
-  `XX.XXX.XXX/XXXX-XX` (head-office branch `0001`).
 - **Lorem Ipsum** — placeholder text in the spirit of [lipsum.com](https://lipsum.com/).
   Pick the unit (**parágrafos**, **palavras**, **letras** or **listas**), the
   amount, and whether the text opens with the classic
@@ -75,18 +118,21 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
   `com.apple.security.files.user-selected.read-write` entitlement, present in
   both `macos/Runner/DebugProfile.entitlements` and `Release.entitlements`.
 
-Each feature has an empty state, **Gerar / Gerar novo**, **Copiar** (or
-**Download**, for QR Codes), and **Limpar** actions.
+Each generator has an empty state, **Gerar / Gerar novo**, **Copiar** (or
+**Download**, for QR Codes; plus **Exportar**, for CPFs and CNPJs), and
+**Limpar** actions. On the CPF and CNPJ pages, generating scrolls the list
+into view.
 
-The layout is responsive, with a single breakpoint at 600 logical pixels
-(`lib/shared/presentation/responsive.dart`):
+The layout is responsive (`lib/shared/presentation/responsive.dart`), with
+breakpoints at 600 and 840 logical pixels (Material 3's compact and expanded
+window sizes):
 
-| | Wide (desktop, tablet) | Compact (phone) |
-| --- | --- | --- |
-| Navigation | `NavigationRail` on the side | `NavigationBar` at the bottom |
-| Page padding | 32 | 16 |
-| Actions | the three buttons share one row | **Gerar** takes a full-width row of its own, with **Copiar** + **Limpar** below it |
-| Generated value | `headlineSmall` | `titleMedium`, scaled down to fit a 36-character UUID |
+| | Expanded (≥ 840: desktop, large tablet) | Medium (600–840) | Compact (< 600: phone) |
+| --- | --- | --- | --- |
+| Navigation | side panel listing every tool under its section title (`NavigationDrawer`) | scrollable `NavigationRail` | `NavigationBar` with CPF, CNPJ, Validar and **Mais**, which opens the other tools, by section, in a bottom sheet |
+| Page padding | 32 | 32 | 16 |
+| Actions | the buttons share one row | the buttons share one row | **Gerar** (or **Colar**) takes a full-width row of its own, with the other buttons below it |
+| Generated value | `headlineSmall` | `headlineSmall` | `titleMedium`, scaled down to fit a 36-character UUID |
 
 ## Architecture
 
@@ -101,13 +147,22 @@ lib/
 ├── main.dart                      # MultiRepositoryProvider + MultiBlocProvider, MaterialApp
 ├── home/
 │   └── presentation/
-│       └── home_page.dart         # Shell: rail on desktop, bottom bar on phones
+│       └── home_page.dart         # Shell: tools by section; side panel, rail or bottom bar + "Mais"
 ├── shared/
+│   ├── data/
+│   │   ├── save_file.dart         # SaveFile: the "save as" dialog, replaceable in tests
+│   │   ├── export_format.dart     # CSV / JSON / TXT encoding of a list
+│   │   └── list_export_repository.dart # Saves a list via file_picker's "save as" + ExportStatus
 │   └── presentation/
-│       ├── generator_view.dart    # Reusable result card + generate/copy/clear UI
-│       ├── generator_actions.dart # Gerar/Copiar/Limpar bar (Copiar replaceable), stacked when compact
-│       ├── responsive.dart        # Compact breakpoint + page padding helpers
-│       ├── monospace.dart         # Monospace text style (passwords, cron)
+│       ├── generator_view.dart    # One-value generator UI (UUID)
+│       ├── list_generator_view.dart # List generator UI (CPF, CNPJ): options, list, actions
+│       ├── generator_actions.dart # Gerar/Copiar/Limpar bar (Copiar replaceable, extra action), stacked when compact
+│       ├── value_list_card.dart   # Empty state, one value in large type, or a numbered list
+│       ├── export_button.dart     # "Exportar" menu (CSV/JSON/TXT) + saved/failed snack bar
+│       ├── count_field.dart       # Amount field with -/+ steppers (CPF, CNPJ, Lorem)
+│       ├── feature_header.dart    # Icon, title and description atop a page
+│       ├── responsive.dart        # Compact/expanded breakpoints + page padding helpers
+│       ├── monospace.dart         # Monospace text style (passwords, cron, documents)
 │       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar
 ├── uuid/
 │   ├── bloc/                      # UuidBloc, UuidEvent, UuidState
@@ -125,20 +180,35 @@ lib/
 │   │   ├── cpf_event.dart
 │   │   └── cpf_state.dart
 │   ├── data/
-│   │   ├── cpf_model.dart
-│   │   └── cpf_repository.dart
+│   │   ├── cpf_model.dart         # Digits, formatting, fiscal region
+│   │   ├── cpf_repository.dart    # generate()/generateMany() by state, checkDigits()
+│   │   └── uf.dart                # The 27 units of the federation + their fiscal regions
 │   └── presentation/
-│       └── cpf_page.dart
+│       ├── cpf_page.dart          # Bloc wiring + export snack bar
+│       └── cpf_options.dart       # Amount, state, punctuation
 ├── cnpj/
 │   ├── bloc/                      # CnpjBloc, CnpjEvent, CnpjState
 │   │   ├── cnpj_bloc.dart
 │   │   ├── cnpj_event.dart
 │   │   └── cnpj_state.dart
 │   ├── data/
-│   │   ├── cnpj_model.dart
-│   │   └── cnpj_repository.dart
+│   │   ├── cnpj_kind.dart         # Numérico / Alfanumérico
+│   │   ├── cnpj_model.dart        # Root, branch, kind, formatting
+│   │   └── cnpj_repository.dart   # generate()/generateMany(), alphanumeric checkDigits()
 │   └── presentation/
-│       └── cnpj_page.dart
+│       ├── cnpj_page.dart         # Bloc wiring + export snack bar
+│       └── cnpj_options.dart      # Format, amount, head office, punctuation
+├── validator/
+│   ├── bloc/                      # ValidatorBloc, ValidatorEvent, ValidatorState
+│   │   ├── validator_bloc.dart
+│   │   ├── validator_event.dart
+│   │   └── validator_state.dart
+│   ├── data/
+│   │   ├── document_validation.dart # Verdict: type, problem, explanation, suggestion, details
+│   │   └── validator_repository.dart # CPF/CNPJ detection and checks, CSV/JSON lines, example
+│   └── presentation/
+│       ├── validator_page.dart    # Bloc wiring
+│       └── validator_view.dart    # Text field, summary, verdicts, Colar/Ver exemplo/Limpar
 ├── lorem/
 │   ├── bloc/                      # LoremBloc, LoremEvent, LoremState
 │   │   ├── lorem_bloc.dart
@@ -227,10 +297,12 @@ integration_test/
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
 test/
-├── widget_test.dart               # App shell, UUID/Lorem/password/cron/QR Code pages, phone-sized layout
+├── widget_test.dart               # App shell (panel, rail, bottom bar + Mais), every page, export, phone-sized layout
+├── shared/                        # Export formats + ListExportRepository; fake_save_dialog.dart helper
 ├── uuid/                          # UuidRepository + UuidBloc tests
-├── cpf/                           # CpfRepository (check-digit validation) + CpfBloc tests
-├── cnpj/                          # CnpjRepository (check-digit validation) + CnpjBloc tests
+├── cpf/                           # CpfRepository (check digits, states, batches) + CpfBloc (incl. export) tests
+├── cnpj/                          # CnpjRepository (numeric + alphanumeric) + CnpjBloc (incl. export) tests
+├── validator/                     # ValidatorRepository (every verdict, CSV/JSON input) + ValidatorBloc tests
 ├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
 ├── password/                      # Generation, options, persisted history + PasswordBloc tests
 ├── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
@@ -274,14 +346,16 @@ in [pubspec.yaml](pubspec.yaml).
 
 ## Where the app name lives
 
-"Fake Generator" is set per platform; update all of these together:
+"Massa de Teste" is set per platform; update all of these together. The
+iOS and Android home screens use the shorter **Massa Teste**, which fits under
+the icon without being cut:
 
 | Platform | File | Key |
 | --- | --- | --- |
-| Flutter | `lib/main.dart`, `lib/home/presentation/home_page.dart` | `MaterialApp.title`, `AppBar` |
+| Flutter | `lib/home/presentation/home_page.dart` | `appTitle` (the `AppBar` and `MaterialApp.title` in `lib/main.dart`) |
 | Android | `android/app/src/main/AndroidManifest.xml` | `android:label` |
 | iOS | `ios/Runner/Info.plist` | `CFBundleDisplayName`, `CFBundleName` |
-| macOS | `macos/Runner/Configs/AppInfo.xcconfig` | `PRODUCT_NAME` |
+| macOS | `macos/Runner/Configs/AppInfo.xcconfig` | `PRODUCT_NAME` — it also names the `.app`, so `tool/notarize.sh`, `macos/Runner.xcodeproj/project.pbxproj` and the `Runner.xcscheme` follow it |
 | Linux | `linux/runner/my_application.cc`, `linux/packaging/*.desktop` | window title, `Name=` |
 | Windows | `windows/runner/main.cpp`, `windows/runner/Runner.rc` | window title, `ProductName` |
 
@@ -393,7 +467,7 @@ The workflow reads these repository secrets:
 - `cupertino_icons` — icons.
 - `shared_preferences` — keeps the recent passwords across restarts.
 - `qr` — QR Code encoding (pure Dart).
-- `file_picker` — the "save as" dialog used to download QR Codes as PNG.
+- `file_picker` — the "save as" dialog used to download QR Codes as PNG and to export CPF/CNPJ lists.
 - `bloc_test` (dev) — Bloc unit testing.
 - `shared_preferences_platform_interface` (dev) — in-memory preferences for
   tests (`InMemorySharedPreferencesAsync`), since the plugin is not registered

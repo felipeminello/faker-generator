@@ -16,8 +16,11 @@ import 'password/data/password_repository.dart';
 import 'qr_code/bloc/qr_code_bloc.dart';
 import 'qr_code/data/qr_code_download_repository.dart';
 import 'qr_code/data/qr_code_repository.dart';
+import 'shared/data/list_export_repository.dart';
 import 'uuid/bloc/uuid_bloc.dart';
 import 'uuid/data/uuid_repository.dart';
+import 'validator/bloc/validator_bloc.dart';
+import 'validator/data/validator_repository.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,6 +42,8 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => CronRepository()),
         RepositoryProvider(create: (_) => QrCodeRepository()),
         RepositoryProvider(create: (_) => QrCodeDownloadRepository()),
+        RepositoryProvider(create: (_) => ListExportRepository()),
+        RepositoryProvider(create: (_) => const ValidatorRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -46,10 +51,20 @@ class MyApp extends StatelessWidget {
             create: (context) => UuidBloc(context.read<UuidRepository>()),
           ),
           BlocProvider(
-            create: (context) => CpfBloc(context.read<CpfRepository>()),
+            create: (context) => CpfBloc(
+              context.read<CpfRepository>(),
+              context.read<ListExportRepository>(),
+            ),
           ),
           BlocProvider(
-            create: (context) => CnpjBloc(context.read<CnpjRepository>()),
+            create: (context) => CnpjBloc(
+              context.read<CnpjRepository>(),
+              context.read<ListExportRepository>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) =>
+                ValidatorBloc(context.read<ValidatorRepository>()),
           ),
           BlocProvider(
             create: (context) => LoremBloc(context.read<LoremRepository>()),
@@ -71,7 +86,7 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
-          title: 'Fake Generator',
+          title: appTitle,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

@@ -16,15 +16,17 @@ void main() {
         InMemorySharedPreferencesAsync.empty();
   });
 
-  testWidgets('starts on the UUID page in the empty state', (tester) async {
+  testWidgets('starts on the CPF page in the empty state', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('UUID v4'), findsWidgets);
+    expect(find.text('Massa de Teste'), findsOneWidget);
+    expect(find.text('CPF'), findsWidgets);
     expect(find.text('Nenhum valor gerado ainda'), findsOneWidget);
   });
 
   testWidgets('generating a UUID replaces the empty state', (tester) async {
     await tester.pumpWidget(const MyApp());
+    await _open(tester, 'UUID v4');
 
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
@@ -39,6 +41,7 @@ void main() {
 
   testWidgets('clearing returns to the empty state', (tester) async {
     await tester.pumpWidget(const MyApp());
+    await _open(tester, 'UUID v4');
 
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
@@ -53,8 +56,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.text('Lorem'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Lorem');
 
     expect(find.text('Nenhum texto gerado ainda'), findsOneWidget);
 
@@ -71,8 +73,7 @@ void main() {
   testWidgets('switching the Lorem unit resets the amount', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.text('Lorem'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Lorem');
     await tester.tap(find.text('Palavras'));
     await tester.pumpAndSettle();
 
@@ -83,8 +84,7 @@ void main() {
   testWidgets('generates a 16-character password by default', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.text('Senha'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Senha');
 
     expect(find.text('Nenhuma senha gerada ainda'), findsOneWidget);
 
@@ -99,8 +99,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Senha'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Senha');
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
 
@@ -117,8 +116,7 @@ void main() {
   testWidgets('lists the generated passwords under Recentes', (tester) async {
     final clipboard = _mockClipboard(tester);
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Senha'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Senha');
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Gerar nova'));
@@ -150,8 +148,7 @@ void main() {
 
   testWidgets('explains a cron expression as it is typed', (tester) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
 
     expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
 
@@ -181,8 +178,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
 
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
@@ -201,8 +197,7 @@ void main() {
 
   testWidgets('uses a cron example picked from the list', (tester) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
 
     await tester.tap(find.text('Exemplos'));
     await tester.pumpAndSettle();
@@ -230,8 +225,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
     final field = find.byType(TextField);
     TextEditingController controller() =>
         tester.widget<TextField>(field).controller!;
@@ -256,8 +250,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
     await tester.enterText(find.byType(TextField), '* * * * *');
     await tester.pumpAndSettle();
     final controller = tester
@@ -292,8 +285,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('Cron'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'Cron');
     await tester.enterText(find.byType(TextField), '5 4 * * *');
     await tester.pumpAndSettle();
 
@@ -308,8 +300,7 @@ void main() {
 
   testWidgets('draws a QR Code for the typed text', (tester) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('QR Code'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'QR Code');
 
     expect(find.text('Nenhum QR Code ainda'), findsOneWidget);
 
@@ -330,8 +321,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('QR Code'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'QR Code');
 
     await tester.tap(find.text('Gerar'));
     await tester.pumpAndSettle();
@@ -354,8 +344,7 @@ void main() {
     final dialog = _FakeFilePicker();
     FilePickerPlatform.instance = dialog;
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.text('QR Code'));
-    await tester.pumpAndSettle();
+    await _open(tester, 'QR Code');
 
     expect(find.text('Copiar'), findsNothing);
     final download = find.widgetWithText(OutlinedButton, 'Download');
@@ -377,59 +366,238 @@ void main() {
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.text('CNPJ'));
+    await _open(tester, 'CNPJ');
+
+    expect(
+      find.textContaining('Cadastro Nacional da Pessoa Jurídica'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('generates a list of CPFs from the chosen state', (tester) async {
+    final clipboard = _mockClipboard(tester);
+    await tester.pumpWidget(const MyApp());
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Quantidade de CPFs'),
+      '3',
+    );
+    await tester.tap(find.text('Qualquer estado'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('AC · Acre').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    final cpfs = RegExp(r'^\d{3}\.\d{3}\.\d{2}2-\d{2}$');
+    final rows = find.byWidgetPredicate(
+      (widget) => widget is Text && cpfs.hasMatch(widget.data ?? ''),
+    );
+    expect(rows, findsNWidgets(3));
+    expect(find.text('Gerar novos'), findsOneWidget);
+    expect(
+      find.text('9º dígito 2: região fiscal de AC, AM, AP, PA, RO e RR'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Copiar'));
+    await tester.pumpAndSettle();
+
+    expect(clipboard.single.split('\n'), hasLength(3));
+
+    await tester.tap(find.text('Com pontuação'));
+    await tester.pumpAndSettle();
+
+    expect(rows, findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Text &&
+            RegExp(r'^\d{8}2\d{2}$').hasMatch(widget.data ?? ''),
+      ),
+      findsNWidgets(3),
+    );
+  });
+
+  testWidgets('generates an alphanumeric CNPJ', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'CNPJ');
+
+    await tester.tap(find.text('Alfanumérico'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    final value = tester.widget<SelectableText>(find.byType(SelectableText));
+    expect(
+      value.data,
+      matches(RegExp(r'^[0-9A-Z]{2}\.[0-9A-Z]{3}\.[0-9A-Z]{3}/0001-\d{2}$')),
+    );
+    expect(value.data, matches(RegExp('[A-Z]')));
+  });
+
+  testWidgets('exports the CPF list as CSV', (tester) async {
+    final dialog = _FakeFilePicker();
+    FilePickerPlatform.instance = dialog;
+    await tester.pumpWidget(const MyApp());
+
+    final export = find.widgetWithText(OutlinedButton, 'Exportar');
+    expect(tester.widget<OutlinedButton>(export).onPressed, isNull);
+
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+    await tester.tap(export);
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('CSV'));
+    await tester.pumpAndSettle();
+
+    expect(dialog.saved.single.fileName, 'cpfs.csv');
+    expect(dialog.saved.single.mimeType, 'text/csv');
+    expect(
+      String.fromCharCodes(dialog.saved.single.bytes),
+      matches(RegExp(r'^cpf\n\d{3}\.\d{3}\.\d{3}-\d{2}\n$')),
+    );
+    expect(
+      find.text('Lista salva em ${Uri.file('/tmp/cpfs.csv').toFilePath()}'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('validates CPFs and CNPJs as they are typed', (tester) async {
+    // Tall enough for both verdicts to be on screen.
+    _setSurface(const Size(800, 1000));
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'Validar');
+
+    expect(find.text('Nenhum valor para validar ainda'), findsOneWidget);
+
+    await tester.enterText(
+      find.byType(TextField),
+      '123.456.789-00\n12.abc.345/01de-35',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('CPF inválido'), findsOneWidget);
+    expect(find.text('Com os dígitos certos: 123.456.789-09'), findsOneWidget);
+    expect(find.text('CNPJ válido'), findsOneWidget);
+    expect(find.text('12.ABC.345/01DE-35'), findsOneWidget);
+    expect(find.text('1 válido'), findsOneWidget);
+    expect(find.text('1 inválido'), findsOneWidget);
+  });
+
+  testWidgets('validates the example, then what is pasted', (tester) async {
+    _mockClipboard(tester, paste: '11.222.333/0001-81');
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'Validar');
+
+    await tester.tap(find.text('Ver exemplo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 válidos'), findsOneWidget);
+    expect(find.text('3 inválidos'), findsOneWidget);
+
+    await tester.tap(find.text('Colar'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text(
-        'Cadastro Nacional da Pessoa Jurídica válido, com dígitos '
-        'verificadores.',
-      ),
+      find.widgetWithText(TextField, '11.222.333/0001-81'),
       findsOneWidget,
     );
+    expect(find.text('CNPJ válido'), findsOneWidget);
+    expect(find.text('Numérico · Matriz · Raiz 11.222.333'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhum valor para validar ainda'), findsOneWidget);
+  });
+
+  testWidgets('a wide window lists every tool by section', (tester) async {
+    _setSurface(const Size(1280, 800));
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.byType(NavigationDrawer), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    for (final section in [
+      'Documentos',
+      'Desenvolvimento',
+      'Outras ferramentas',
+    ]) {
+      expect(find.text(section), findsOneWidget);
+    }
+
+    await tester.tap(find.text('Cron'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
   });
 
   group('phone-sized window', () {
     // Roughly an iPhone 15 in logical pixels.
     setUp(() => _setSurface(const Size(393, 852)));
 
-    testWidgets('uses a bottom bar instead of the side rail', (tester) async {
+    testWidgets('keeps the documents in a bottom bar', (tester) async {
       await tester.pumpWidget(const MyApp());
 
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(find.byType(NavigationRail), findsNothing);
+      expect(find.byType(NavigationDrawer), findsNothing);
+      for (final label in ['CPF', 'CNPJ', 'Validar', 'Mais']) {
+        expect(
+          find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+        );
+      }
     });
 
     testWidgets('navigates from the bottom bar', (tester) async {
       await tester.pumpWidget(const MyApp());
 
-      await tester.tap(find.text('CPF'));
+      await tester.tap(find.text('CNPJ'));
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-          'Cadastro de Pessoa Física válido, com dígitos '
-          'verificadores.',
-        ),
+        find.textContaining('Cadastro Nacional da Pessoa Jurídica'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('opens the other tools from "Mais"', (tester) async {
+      await tester.pumpWidget(const MyApp());
+
+      await tester.tap(find.text('Mais'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Desenvolvimento'), findsOneWidget);
+      expect(find.text('Outras ferramentas'), findsOneWidget);
+
+      await tester.tap(find.text('Cron'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
     });
 
     testWidgets('lays out every page without overflowing', (tester) async {
       await tester.pumpWidget(const MyApp());
 
-      for (final tab in [
-        'UUID v4',
+      for (final tool in [
         'CPF',
         'CNPJ',
+        'Validar',
+        'UUID v4',
+        'Cron',
         'Lorem',
         'Senha',
-        'Cron',
         'QR Code',
       ]) {
-        await tester.tap(find.text(tab).last);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Gerar'));
+        await _openOnPhone(tester, tool);
+        await tester.tap(
+          find.text(tool == 'Validar' ? 'Ver exemplo' : 'Gerar'),
+        );
         await tester.pumpAndSettle();
         // pumpAndSettle rethrows the overflow assertion raised by a Row or
         // Column that does not fit, so reaching here means the page fits.
@@ -458,8 +626,7 @@ void main() {
     testWidgets('shows the recent passwords in a bottom sheet', (tester) async {
       _setSurface(const Size(320, 568));
       await tester.pumpWidget(const MyApp());
-      await tester.tap(find.text('Senha'));
-      await tester.pumpAndSettle();
+      await _openOnPhone(tester, 'Senha');
       await tester.tap(find.text('Gerar'));
       await tester.pumpAndSettle();
 
@@ -493,12 +660,11 @@ void main() {
       await tester.pumpWidget(const MyApp());
       // The QR Code page is the tallest: the code alone is as wide as the
       // screen.
-      await tester.tap(find.text('QR Code'));
-      await tester.pumpAndSettle();
+      await _openOnPhone(tester, 'QR Code');
       await tester.tap(find.text('Gerar'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('UUID v4').last);
-      await tester.pumpAndSettle();
+      // The CNPJ page has the most actions: Gerar, Copiar, Exportar, Limpar.
+      await _openOnPhone(tester, 'CNPJ');
       await tester.tap(find.text('Gerar'));
       await tester.pumpAndSettle();
 
@@ -511,8 +677,43 @@ void main() {
   });
 }
 
+/// Opens [tool] from the side navigation of a wide window. The rail scrolls
+/// when the window is too short for every tool.
+Future<void> _open(WidgetTester tester, String tool) async {
+  final entry = find.descendant(
+    of: find.byType(NavigationRail),
+    matching: find.text(tool),
+  );
+  await tester.ensureVisible(entry);
+  await tester.pumpAndSettle();
+  await tester.tap(entry);
+  await tester.pumpAndSettle();
+}
+
+/// Opens [tool] on a phone: straight from the bottom bar, or through "Mais".
+Future<void> _openOnPhone(WidgetTester tester, String tool) async {
+  final inBar = find.descendant(
+    of: find.byType(NavigationBar),
+    matching: find.text(tool),
+  );
+  if (tester.any(inBar)) {
+    await tester.tap(inBar);
+  } else {
+    await tester.tap(find.text('Mais'));
+    await tester.pumpAndSettle();
+    final entry = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text(tool, skipOffstage: false),
+    );
+    await tester.ensureVisible(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(entry);
+  }
+  await tester.pumpAndSettle();
+}
+
 /// Stands in for the native "save as" dialog: records each save and answers
-/// as if the user picked `/tmp/qrcode.png`.
+/// as if the user picked `/tmp/<suggested name>`.
 class _FakeFilePicker extends FilePickerPlatform {
   final saved = <({String fileName, String mimeType, Uint8List bytes})>[];
 
@@ -529,19 +730,23 @@ class _FakeFilePicker extends FilePickerPlatform {
     WebOptions webOptions = const WebOptions(),
   }) async {
     saved.add((fileName: fileName, mimeType: mimeType, bytes: bytes));
-    return Uri.file('/tmp/qrcode.png');
+    return Uri.file('/tmp/$fileName');
   }
 }
 
 /// Answers the clipboard channel, which has no platform behind it in tests
-/// (a copy would never complete), and returns the texts copied.
-List<String> _mockClipboard(WidgetTester tester) {
+/// (a copy would never complete), and returns the texts copied. A paste
+/// reads [paste].
+List<String> _mockClipboard(WidgetTester tester, {String? paste}) {
   final copied = <String>[];
   tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
     SystemChannels.platform,
     (call) async {
       if (call.method == 'Clipboard.setData') {
         copied.add((call.arguments as Map)['text'] as String);
+      }
+      if (call.method == 'Clipboard.getData' && paste != null) {
+        return {'text': paste};
       }
       return null;
     },

@@ -1,4 +1,4 @@
-"""Gera os arquivos-fonte do icone do Fake Generator.
+"""Gera os arquivos-fonte do icone do Massa de Teste.
 
 Execute a partir da raiz do projeto:
 

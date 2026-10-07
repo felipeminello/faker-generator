@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Fake Generator
-Comment=Gerador de dados fake: UUID v4, CPF e CNPJ
+Name=Massa de Teste
+Comment=Dados de teste: gere e valide CPF e CNPJ (inclusive alfanumérico)
 Exec=fake_generator
 Icon=br.dev.minello.fakegenerator
 Terminal=false
 Categories=Development;Utility;
-Keywords=uuid;cpf;cnpj;gerador;fake;
+Keywords=cpf;cnpj;alfanumérico;validar;teste;uuid;cron;
 StartupWMClass=br.dev.minello.fakegenerator
