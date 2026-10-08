@@ -286,7 +286,8 @@ tool/
 ├── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
 └── store_media/                   # App Store screenshots (see "App Store screenshots")
     ├── capture.py                 # Runs the scenes on a simulator or the Mac and saves the raw captures
-    └── compose.py                 # Frames + captions → assets/store_media/{iphone,ipad,mac} (git-ignored)
+    ├── compose.py                 # Frames + captions → assets/store_media/{iphone,ipad,mac} (git-ignored)
+    └── creative.py                # Product page header and search result images → assets/store_media/creative/
 
 integration_test/
 └── store_media_test.dart          # Scripted scenes for the screenshots, read by capture.py
@@ -422,6 +423,27 @@ export menu, validator, pasted JSON), then cron, UUID, Lorem Ipsum and QR
 Code. Captions are in `SCREENSHOTS` in `compose.py`; scenes
 in the `screenshots` test. `capture.py` also accepts a comma-separated list of
 scenes as its last argument.
+
+### Header and search result images
+
+Since iOS 27 the App Store also shows a product page header and a search
+result image ("Cabeçalho e resultados de busca" in App Store Connect).
+[tool/store_media/creative.py](tool/store_media/creative.py) draws them in
+`assets/store_media/creative/`, with the same `pillow` setup:
+
+| File | Size | Use |
+| --- | --- | --- |
+| `universal_5244x2950.png` | 16:9, PNG | one image for both placements |
+| `header_3840x1646.png` | 21:9 | product page header |
+| `search_3840x2560.png` | 3:2 | search result; needs the iPhone captures |
+
+The App Store crops them per device, so everything that must be seen — the
+phrase "Pronto para o novo CNPJ" and a card with the Receita Federal's
+alphanumeric example — sits inside the safe area of Apple's templates
+(`UNIVERSAL`, `HEADER`, `SEARCH` in the script); the floating CPFs and CNPJs
+around it may be cut. The search image adds the validator on an iPhone. They
+have no alpha channel, which the App Store rejects. Check the crops with the
+preview in App Store Connect before saving.
 
 ## Releases
 
