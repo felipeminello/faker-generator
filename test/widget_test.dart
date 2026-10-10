@@ -512,6 +512,30 @@ void main() {
     expect(find.text('Nenhum valor para validar ainda'), findsOneWidget);
   });
 
+  testWidgets(
+    'a tap outside a text field puts the keyboard away',
+    (tester) async {
+      await tester.pumpWidget(const MyApp());
+      await _open(tester, 'Validar');
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.tap(find.text('Validar CPF e CNPJ'));
+      await tester.pump();
+
+      expect(tester.testTextInput.isVisible, isFalse);
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).focusNode,
+        isNot(predicate<FocusNode>((node) => node.hasFocus)),
+      );
+    },
+    // Flutter already does this for a mouse click; the touch of a phone is
+    // what needs the override in main.dart.
+    variant: TargetPlatformVariant.mobile(),
+  );
+
   testWidgets('a wide window lists every tool by section', (tester) async {
     _setSurface(const Size(1280, 800));
     await tester.pumpWidget(const MyApp());
@@ -579,6 +603,48 @@ void main() {
 
       expect(find.byType(BottomSheet), findsNothing);
       expect(find.text('Nenhuma expressão ainda'), findsOneWidget);
+    });
+
+    testWidgets('keeps the bottom bar above the keyboard', (tester) async {
+      await tester.pumpWidget(const MyApp());
+      await _openOnPhone(tester, 'Validar');
+      await tester.tap(find.byType(TextField));
+      _showKeyboard(tester, height: 336);
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(find.byType(NavigationBar)).bottom, 852 - 336);
+
+      // The page can be left while typing.
+      await _openOnPhone(tester, 'CPF');
+
+      expect(find.text('Nenhum valor gerado ainda'), findsOneWidget);
+    });
+
+    testWidgets('fits every page with a text field above the keyboard', (
+      tester,
+    ) async {
+      // iPhone SE (2nd and 3rd gen): the shortest screen left once the
+      // keyboard and the bottom bar are both up.
+      _setSurface(const Size(375, 667));
+      _showKeyboard(tester, height: 260);
+      await tester.pumpWidget(const MyApp());
+
+      for (final tool in [
+        'CPF',
+        'CNPJ',
+        'Validar',
+        'Cron',
+        'Lorem',
+        'QR Code',
+      ]) {
+        await _openOnPhone(tester, tool);
+        final field = find.byType(TextField).first;
+        await tester.ensureVisible(field);
+        await tester.pumpAndSettle();
+        await tester.tap(field);
+        // pumpAndSettle rethrows the overflow assertion, as above.
+        await tester.pumpAndSettle();
+      }
     });
 
     testWidgets('lays out every page without overflowing', (tester) async {
@@ -763,6 +829,15 @@ List<String> _mockClipboard(WidgetTester tester, {String? paste}) {
 /// The password shown on the password page.
 String _shownPassword(WidgetTester tester) =>
     tester.widget<SelectableText>(find.byType(SelectableText)).data!;
+
+/// Stands in for an on-screen keyboard [height] logical pixels tall, up for
+/// the rest of the test.
+void _showKeyboard(WidgetTester tester, {required double height}) {
+  tester.view.viewInsets = FakeViewPadding(
+    bottom: height * tester.view.devicePixelRatio,
+  );
+  addTearDown(tester.view.resetViewInsets);
+}
 
 /// Pins the test window to [size] for the duration of the test.
 void _setSurface(Size size) {

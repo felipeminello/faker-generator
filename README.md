@@ -297,6 +297,8 @@ integration_test/
 
 linux/packaging/                   # .desktop entry + hicolor icon theme (see its README)
 
+VALIDACAO_130.md                   # Checklist for the 1.3.0 demo video App Review asked for (guideline 2.1)
+
 test/
 ├── widget_test.dart               # App shell (panel, rail, bottom bar + Mais), every page, export, phone-sized layout
 ├── shared/                        # Export formats + ListExportRepository; fake_save_dialog.dart helper

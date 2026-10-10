@@ -92,6 +92,19 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
+          // A tap outside a text field puts the keyboard away on every page.
+          // Flutter only does that for mouse clicks; on a phone the keyboard
+          // stayed up, since a multi-line field's return key types a line
+          // break and a numeric keyboard has no return key at all.
+          builder: (context, child) => Actions(
+            actions: {
+              EditableTextTapOutsideIntent:
+                  CallbackAction<EditableTextTapOutsideIntent>(
+                    onInvoke: (intent) => intent.focusNode.unfocus(),
+                  ),
+            },
+            child: child!,
+          ),
           home: const HomePage(),
         ),
       ),

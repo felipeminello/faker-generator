@@ -1,0 +1,20 @@
+<pt-BR>
+Massa de Teste gera e valida documentos brasileiros para quem desenvolve e testa sistemas.
+• CPF válido: um ou até 1000 sem repetição, de qualquer estado ou de um específico (o 9º dígito indica a região fiscal).
+• CNPJ numérico e o novo CNPJ alfanumérico da Receita Federal, de matriz ou de filiais.
+• Listas exportadas em CSV, JSON ou TXT, ou copiadas de uma vez.
+• Validador: cole uma coluna de planilha ou uma lista JSON e veja, linha a linha, o que é válido, o que está errado e qual seria o valor certo.
+• Cron explicado em português, com as próximas execuções.
+• Também: UUID v4, Lorem Ipsum, senhas e QR Code.
+Funciona offline, sem cadastro e sem coletar dados. Os números gerados servem para testar sistemas.
+</pt-BR>
+<en-US>
+Since the 4.3 rejection of version 1.2.1 we changed this app's focus and functionality substantially. It was renamed from "Fake Generator" to "Massa de Teste" ("test data" in Brazilian QA jargon) and now serves one audience: Brazilian developers and QA engineers who need valid test documents.
+New in this version:
+– Alphanumeric CNPJ: Brazil's Receita Federal started issuing company IDs with letters in July 2026 (IN RFB 2.229/2024). Systems must be tested with them, and few tools generate or validate them. The app implements the official check-digit rule.
+– A validator that takes a pasted spreadsheet column or JSON array, identifies each line as CPF or CNPJ, and explains what is wrong (wrong check digits and the right ones, leading zeros dropped by spreadsheets, repeated digits).
+– Batch generation (1–1000, no repeats) with CSV/JSON/TXT export, CPFs by issuing state, CNPJs for head offices or branches.
+The app opens on these document tools. The developer tools (UUID, cron explained in Portuguese) come next, and the generic generators are secondary.
+I develop and publish the app myself. It is not built from a commercial template or an app-generation service. It works offline, needs no account and collects no data.
+To try it: open "Validar" and tap "Ver exemplo". On "CNPJ", choose "Alfanumérico".
+</en-US>

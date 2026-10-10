@@ -107,24 +107,26 @@ class _HomePageState extends State<HomePage> {
       return Scaffold(
         appBar: appBar,
         body: SafeArea(child: page),
-        bottomNavigationBar: NavigationBar(
-          // Any tool past the bar's own lights up "Mais".
-          selectedIndex: min(_selectedIndex, _barTools.length),
-          onDestinationSelected: (index) =>
-              index < _barTools.length ? _select(index) : _showMore(context),
-          destinations: [
-            for (final tool in _barTools)
-              NavigationDestination(
-                icon: Icon(tool.icon),
-                selectedIcon: Icon(tool.selectedIcon),
-                label: tool.label,
+        bottomNavigationBar: _AboveKeyboard(
+          child: NavigationBar(
+            // Any tool past the bar's own lights up "Mais".
+            selectedIndex: min(_selectedIndex, _barTools.length),
+            onDestinationSelected: (index) =>
+                index < _barTools.length ? _select(index) : _showMore(context),
+            destinations: [
+              for (final tool in _barTools)
+                NavigationDestination(
+                  icon: Icon(tool.icon),
+                  selectedIcon: Icon(tool.selectedIcon),
+                  label: tool.label,
+                ),
+              const NavigationDestination(
+                icon: Icon(Icons.apps_outlined),
+                selectedIcon: Icon(Icons.apps),
+                label: 'Mais',
               ),
-            const NavigationDestination(
-              icon: Icon(Icons.apps_outlined),
-              selectedIcon: Icon(Icons.apps),
-              label: 'Mais',
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -219,6 +221,28 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Keeps the phone's bottom bar above the on-screen keyboard.
+///
+/// A [Scaffold] lays the bar out at the foot of the screen, under the
+/// keyboard, which left a page with a focused field no way out. Padding it
+/// by the keyboard's height lifts it, and makes the [Scaffold] shrink the
+/// body by the bar plus the keyboard. While the keyboard is up the bar's
+/// own safe-area padding is zero (it is folded into the keyboard), so it
+/// sits right on top of it.
+class _AboveKeyboard extends StatelessWidget {
+  const _AboveKeyboard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: child,
     );
   }
 }
