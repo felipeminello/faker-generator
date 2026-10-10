@@ -283,6 +283,7 @@ tool/
 ├── generate_icon.py               # Draws every icon source; also writes the .ico and Linux icons
 ├── playstore_publish.sh           # Builds the AAB and publishes it to a Google Play track
 ├── applestore_publish.sh          # Builds the iOS IPA or macOS .pkg and sends it to TestFlight / App Store review
+├── release_notes.txt              # What to Test / What's New per language, loaded by applestore_publish.sh
 ├── notarize.sh                    # Signs the macOS .app with Developer ID, notarizes it and zips it
 └── store_media/                   # App Store screenshots (see "App Store screenshots")
     ├── capture.py                 # Runs the scenes on a simulator or the Mac and saves the raw captures

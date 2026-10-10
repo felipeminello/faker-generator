@@ -7,6 +7,7 @@ Massa de Teste gera e valida documentos brasileiros para quem desenvolve e testa
 • Cron explicado em português, com as próximas execuções.
 • Também: UUID v4, Lorem Ipsum, senhas e QR Code.
 Funciona offline, sem cadastro e sem coletar dados. Os números gerados servem para testar sistemas.
+Correção: no iPhone, tocar fora de uma caixa de texto agora fecha o teclado, e a barra de navegação continua visível acima dele. Antes o teclado cobria a barra e, no Validar, não dava para sair da tela.
 </pt-BR>
 <en-US>
 Since the 4.3 rejection of version 1.2.1 we changed this app's focus and functionality substantially. It was renamed from "Fake Generator" to "Massa de Teste" ("test data" in Brazilian QA jargon) and now serves one audience: Brazilian developers and QA engineers who need valid test documents.
@@ -17,4 +18,5 @@ New in this version:
 The app opens on these document tools. The developer tools (UUID, cron explained in Portuguese) come next, and the generic generators are secondary.
 I develop and publish the app myself. It is not built from a commercial template or an app-generation service. It works offline, needs no account and collects no data.
 To try it: open "Validar" and tap "Ver exemplo". On "CNPJ", choose "Alfanumérico".
+This build also fixes an iOS bug found while recording the demo video App Review asked for: on screens with a text field, most visibly "Validar", the keyboard covered the tab bar and could not be dismissed, so the screen could not be left. Tapping outside a text field now closes the keyboard, and the tab bar stays visible above it.
 </en-US>
