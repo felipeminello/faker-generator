@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_generator/main.dart';
+import 'package:fake_generator/shared/presentation/test_data_notice.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -22,6 +23,15 @@ void main() {
     expect(find.text('Massa de Teste'), findsOneWidget);
     expect(find.text('CPF'), findsWidgets);
     expect(find.text('Nenhum valor gerado ainda'), findsOneWidget);
+  });
+
+  testWidgets('says on both document generators that the numbers are '
+      'fictitious test data', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    expect(find.text(TestDataNotice.text), findsOneWidget);
+
+    await _open(tester, 'CNPJ');
+    expect(find.text(TestDataNotice.text), findsOneWidget);
   });
 
   testWidgets('generating a UUID replaces the empty state', (tester) async {
@@ -368,10 +378,7 @@ void main() {
 
     await _open(tester, 'CNPJ');
 
-    expect(
-      find.textContaining('Cadastro Nacional da Pessoa Jurídica'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Números de CNPJ fictícios'), findsOneWidget);
   });
 
   testWidgets('generates a list of CPFs from the chosen state', (tester) async {
@@ -382,6 +389,7 @@ void main() {
       find.widgetWithText(TextField, 'Quantidade de CPFs'),
       '3',
     );
+    await tester.ensureVisible(find.text('Qualquer estado'));
     await tester.tap(find.text('Qualquer estado'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('AC · Acre').last);
@@ -583,10 +591,7 @@ void main() {
       await tester.tap(find.text('CNPJ'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Cadastro Nacional da Pessoa Jurídica'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Números de CNPJ fictícios'), findsOneWidget);
     });
 
     testWidgets('opens the other tools from "Mais"', (tester) async {

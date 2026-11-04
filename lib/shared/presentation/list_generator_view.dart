@@ -5,10 +5,11 @@ import 'export_button.dart';
 import 'feature_header.dart';
 import 'generator_actions.dart';
 import 'responsive.dart';
+import 'test_data_notice.dart';
 import 'value_list_card.dart';
 
 /// Presentation widget shared by the generators that make lists (CPF, CNPJ):
-/// header, the feature's [options], the values and the
+/// header, the test-data notice, the feature's [options], the values and the
 /// "Gerar / Copiar / Exportar / Limpar" actions.
 ///
 /// Like `GeneratorView` it holds no business logic: the page passes the
@@ -97,6 +98,8 @@ class _ListGeneratorViewState extends State<ListGeneratorView> {
                         title: widget.title,
                         description: widget.description,
                       ),
+                      const SizedBox(height: 12),
+                      const TestDataNotice(),
                       const SizedBox(height: 20),
                       // A Card (and not a plain Container) so the switch
                       // tiles have a Material ancestor to paint their ink on.

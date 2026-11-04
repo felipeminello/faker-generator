@@ -161,6 +161,7 @@ lib/
 │       ├── export_button.dart     # "Exportar" menu (CSV/JSON/TXT) + saved/failed snack bar
 │       ├── count_field.dart       # Amount field with -/+ steppers (CPF, CNPJ, Lorem)
 │       ├── feature_header.dart    # Icon, title and description atop a page
+│       ├── test_data_notice.dart  # "Só para testar software" notice on the CPF/CNPJ pages (guideline 5)
 │       ├── responsive.dart        # Compact/expanded breakpoints + page padding helpers
 │       ├── monospace.dart         # Monospace text style (passwords, cron, documents)
 │       └── copy_to_clipboard.dart # Clipboard copy + confirmation snack bar

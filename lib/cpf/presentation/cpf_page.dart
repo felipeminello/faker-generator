@@ -23,9 +23,9 @@ class CpfPage extends StatelessWidget {
           return ListGeneratorView(
             title: 'CPF',
             description:
-                'Cadastro de Pessoa Física válido, com dígitos '
-                'verificadores. Gere um ou uma lista sem repetições, de '
-                'qualquer estado ou de um específico, e exporte para usar '
+                'Números de CPF fictícios, com dígitos verificadores que '
+                'passam na validação. Gere um ou uma lista sem repetições, '
+                'de qualquer estado ou de um específico, e exporte para usar '
                 'nos seus testes.',
             icon: Icons.badge,
             options: CpfOptions(

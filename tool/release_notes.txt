@@ -1,16 +1,17 @@
 <pt-BR>
-Massa de Teste gera e valida documentos brasileiros para quem desenvolve e testa sistemas.
-• CPF válido: um ou até 1000 sem repetição, de qualquer estado ou de um específico (o 9º dígito indica a região fiscal).
+Massa de Teste gera e valida números de CPF e CNPJ fictícios para quem desenvolve e testa sistemas brasileiros.
+• CPF de teste: um ou até 1000 sem repetição, de qualquer estado ou de um específico (o 9º dígito indica a região fiscal).
 • CNPJ numérico e o novo CNPJ alfanumérico da Receita Federal, de matriz ou de filiais.
 • Listas exportadas em CSV, JSON ou TXT, ou copiadas de uma vez.
-• Validador: cole uma coluna de planilha ou uma lista JSON e veja, linha a linha, o que é válido, o que está errado e qual seria o valor certo.
+• Validador: cole uma coluna de planilha ou uma lista JSON e veja, linha a linha, o que passa na validação, o que está errado e qual seria o valor certo.
 • Cron explicado em português, com as próximas execuções.
 • Também: UUID v4, Lorem Ipsum, senhas e QR Code.
-Funciona offline, sem cadastro e sem coletar dados. Os números gerados servem para testar sistemas.
+Funciona offline, sem cadastro e sem coletar dados.
+Novo aviso nas telas de CPF e CNPJ: os números são sorteados pelo algoritmo público dos dígitos verificadores, só para testar software. Não são documentos, não vêm de nenhum cadastro e não devem ser usados para identificar ninguém.
 Correção: no iPhone, tocar fora de uma caixa de texto agora fecha o teclado, e a barra de navegação continua visível acima dele. Antes o teclado cobria a barra e, no Validar, não dava para sair da tela.
 </pt-BR>
 <en-US>
-Since the 4.3 rejection of version 1.2.1 we changed this app's focus and functionality substantially. It was renamed from "Fake Generator" to "Massa de Teste" ("test data" in Brazilian QA jargon) and now serves one audience: Brazilian developers and QA engineers who need valid test documents.
+Since the 4.3 rejection of version 1.2.1 we changed this app's focus and functionality substantially. It was renamed from "Fake Generator" to "Massa de Teste" ("test data" in Brazilian QA jargon) and now serves one audience: Brazilian developers and QA engineers who need test values that pass CPF/CNPJ check-digit validation.
 New in this version:
 – Alphanumeric CNPJ: Brazil's Receita Federal started issuing company IDs with letters in July 2026 (IN RFB 2.229/2024). Systems must be tested with them, and few tools generate or validate them. The app implements the official check-digit rule.
 – A validator that takes a pasted spreadsheet column or JSON array, identifies each line as CPF or CNPJ, and explains what is wrong (wrong check digits and the right ones, leading zeros dropped by spreadsheets, repeated digits).
@@ -18,5 +19,6 @@ New in this version:
 The app opens on these document tools. The developer tools (UUID, cron explained in Portuguese) come next, and the generic generators are secondary.
 I develop and publish the app myself. It is not built from a commercial template or an app-generation service. It works offline, needs no account and collects no data.
 To try it: open "Validar" and tap "Ver exemplo". On "CNPJ", choose "Alfanumérico".
-This build also fixes an iOS bug found while recording the demo video App Review asked for: on screens with a text field, most visibly "Validar", the keyboard covered the tab bar and could not be dismissed, so the screen could not be left. Tapping outside a text field now closes the keyboard, and the tab bar stays visible above it.
+Build 4 (guideline 5): the CPF and CNPJ screens now show a permanent notice that the numbers are random, computed with the public check-digit algorithm, only for software testing; they are not documents, come from no registry, and must not be used to identify anyone. The app is now offered only in Brazil.
+This version also fixes an iOS bug found while recording the demo video App Review asked for: on screens with a text field, most visibly "Validar", the keyboard covered the tab bar and could not be dismissed, so the screen could not be left. Tapping outside a text field now closes the keyboard, and the tab bar stays visible above it.
 </en-US>

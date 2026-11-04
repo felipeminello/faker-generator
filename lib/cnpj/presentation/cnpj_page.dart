@@ -23,10 +23,10 @@ class CnpjPage extends StatelessWidget {
           return ListGeneratorView(
             title: 'CNPJ',
             description:
-                'Cadastro Nacional da Pessoa Jurídica válido, com dígitos '
-                'verificadores, no formato numérico ou no novo alfanumérico '
-                'da Receita Federal. Gere um ou uma lista sem repetições e '
-                'exporte para usar nos seus testes.',
+                'Números de CNPJ fictícios, com dígitos verificadores que '
+                'passam na validação, no formato numérico ou no novo '
+                'alfanumérico da Receita Federal. Gere um ou uma lista sem '
+                'repetições e exporte para usar nos seus testes.',
             icon: Icons.business,
             options: CnpjOptions(
               count: state.count,
