@@ -22,5 +22,5 @@ I develop and publish the app myself. It is not built from a commercial template
 To try it: open "Validar" and tap "Ver exemplo". On "CNPJ", choose "Alfanumérico".
 Build 4 (guideline 5): the CPF and CNPJ screens now show a permanent notice that the numbers are random, computed with the public check-digit algorithm, only for software testing; they are not documents, come from no registry, and must not be used to identify anyone. The app is now offered only in Brazil.
 This version also fixes an iOS bug found while recording the demo video App Review asked for: on screens with a text field, most visibly "Validar", the keyboard covered the tab bar and could not be dismissed, so the screen could not be left. Tapping outside a text field now closes the keyboard, and the tab bar stays visible above it.
-The navigation section that groups CPF, CNPJ and Validar was renamed from "Documentos" to "CPF e CNPJ": the app produces check-digit-valid numbers for testing, not documents.
+Version 1.3.1 (5), guidelines 5 and 1.1.6: the navigation section that groups CPF, CNPJ and Validar was renamed from "Documentos" (documents) to "CPF e CNPJ", because the app produces numbers for software tests, not documents. The first screenshot no longer says "CPF válido" (valid CPF).
 </en-US>

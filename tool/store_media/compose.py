@@ -56,8 +56,8 @@ DEVICES = {
 
 # In App Store order: captured screen, headline, subtitle.
 SCREENSHOTS = [
-    ('01_cpf', 'CPF válido\npara seus testes',
-     'Em lote, sem repetição, prontos para copiar'),
+    ('01_cpf', 'CPF de teste\nem lote',
+     'Até 1000, sem repetição, prontos para copiar'),
     ('02_cpf_estado', 'CPF do estado\nque você escolher',
      'O 9º dígito segue a região fiscal'),
     ('03_cnpj', 'CNPJ numérico\ne alfanumérico',
