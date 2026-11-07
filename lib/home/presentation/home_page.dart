@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   static const _sections = <_Section>[
-    _Section('Documentos', [
+    _Section('CPF e CNPJ', [
       _Tool(
         icon: Icons.badge_outlined,
         selectedIcon: Icons.badge,

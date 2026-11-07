@@ -551,7 +551,7 @@ void main() {
     expect(find.byType(NavigationDrawer), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
     for (final section in [
-      'Documentos',
+      'CPF e CNPJ',
       'Desenvolvimento',
       'Outras ferramentas',
     ]) {

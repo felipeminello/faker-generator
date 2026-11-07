@@ -14,7 +14,7 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
 ## Features
 
-The tools are grouped as **Documentos** (CPF, CNPJ, Validar),
+The tools are grouped as **CPF e CNPJ** (CPF, CNPJ, Validar),
 **Desenvolvimento** (UUID v4, Cron) and **Outras ferramentas** (Lorem, Senha,
 QR Code).
 
