@@ -4,7 +4,7 @@ Test data for Brazilian developers and QA: a Flutter app that generates and
 validates **CPF** and **CNPJ** numbers — including the new **alphanumeric
 CNPJ** — one at a time or in lists exported as CSV, JSON or TXT. It also
 generates **UUID v4**s, explains **cron** expressions in Portuguese, and has
-**Lorem Ipsum**, **password** and **QR Code** generators. Everything runs
+**Lorem Ipsum**, **password**, **QR Code** and **image** generators. Everything runs
 offline, with one-click copy to the clipboard.
 
 The app was called "Fake Generator" until version 1.2; the Dart package and the
@@ -16,7 +16,7 @@ Supported targets: **Windows, macOS, Linux, Android, and iOS**.
 
 The tools are grouped as **CPF e CNPJ** (CPF, CNPJ, Validar),
 **Desenvolvimento** (UUID v4, Cron) and **Outras ferramentas** (Lorem, Senha,
-QR Code).
+QR Code, Imagem).
 
 - **CPF** — valid Cadastro de Pessoa Física numbers (`Random.secure()`),
   formatted `XXX.XXX.XXX-XX` or as 11 bare digits (**Com pontuação**). Generate
@@ -118,8 +118,27 @@ QR Code).
   `com.apple.security.files.user-selected.read-write` entitlement, present in
   both `macos/Runner/DebugProfile.entitlements` and `Release.entitlements`.
 
+- **Imagem** — colorful, psychedelic test images (uploads, layouts,
+  placeholders) of any size from 1×1 to 4096×4096 pixels, **1024×768** by
+  default. Type the **Largura** and **Altura**, or pick a common size
+  (1024×768, 800×600, 1280×720, 1920×1080, 1080×1080, 1080×1920); **Inverter**
+  swaps them. **Gerar** draws a new picture from a random seed; resizing keeps
+  the picture and redraws it at the new proportions. The page shows a preview
+  (at most 480 px on the longer side) and **Download** saves the PNG at the
+  full size, named `imagem-<largura>x<altura>.png`, through the same "save as"
+  dialog as the QR Code.
+
+  The picture is drawn pixel by pixel by `PsychedelicRecipe`: the seed picks a
+  swirl around a random center, a kaleidoscope of 3–8 mirrored slices (half
+  of the time), a two-pass sine domain warp, and a plasma of three plane waves
+  plus a circular one, which a cosine palette with the RGB phases a third of a
+  turn apart turns into rainbow bands. Coordinates are relative to the longer
+  side, so the preview and the PNG show the same picture. The full-size PNG
+  is rendered in another isolate (`Isolate.run`), since 4096×4096 takes
+  seconds; PNG encoding is shared with the QR Code (`lib/shared/data/png.dart`).
+
 Each generator has an empty state, **Gerar / Gerar novo**, **Copiar** (or
-**Download**, for QR Codes; plus **Exportar**, for CPFs and CNPJs), and
+**Download**, for QR Codes and images; plus **Exportar**, for CPFs and CNPJs), and
 **Limpar** actions. On the CPF and CNPJ pages, generating scrolls the list
 into view.
 
@@ -151,6 +170,7 @@ lib/
 ├── shared/
 │   ├── data/
 │   │   ├── save_file.dart         # SaveFile: the "save as" dialog, replaceable in tests
+│   │   ├── png.dart               # PNG encoder (pure Dart: zlib + CRC32, Sub filter), grayscale or RGB
 │   │   ├── export_format.dart     # CSV / JSON / TXT encoding of a list
 │   │   └── list_export_repository.dart # Saves a list via file_picker's "save as" + ExportStatus
 │   └── presentation/
@@ -246,12 +266,26 @@ lib/
 │   │   ├── qr_code_level.dart     # Error correction levels L/M/Q/H + byte limits
 │   │   ├── qr_code_model.dart     # Encoded modules + QrCodeTooLongException
 │   │   ├── qr_code_repository.dart # encode() (qr package, UTF-8 + ECI), random() samples
-│   │   ├── qr_code_png.dart       # 512×512 PNG encoder (pure Dart: zlib + CRC32)
+│   │   ├── qr_code_png.dart       # 512×512 black-on-white pixels → shared PNG encoder
 │   │   └── qr_code_download_repository.dart # Saves the PNG via file_picker's "save as"
 │   └── presentation/
 │       ├── qr_code_page.dart      # Bloc wiring
 │       ├── qr_code_view.dart      # Text field, level selector, preview
 │       └── qr_code_painter.dart   # CustomPainter: modules + quiet zone
+├── image_generator/
+│   ├── bloc/                      # ImageGeneratorBloc, ImageGeneratorEvent, ImageGeneratorState
+│   │   ├── image_generator_bloc.dart
+│   │   ├── image_generator_event.dart
+│   │   └── image_generator_state.dart
+│   ├── data/
+│   │   ├── image_size.dart        # 1..4096 limits, 1024×768 default, common sizes
+│   │   ├── generated_image_model.dart # Width, height, seed + file name
+│   │   ├── psychedelic_recipe.dart # The algorithm: swirl, kaleidoscope, warp, plasma, cosine palette
+│   │   ├── image_generator_repository.dart # generate() (random seed), preview(), renderPng()
+│   │   └── image_download_repository.dart # Renders in an isolate, saves via file_picker's "save as"
+│   └── presentation/
+│       ├── image_generator_page.dart # Bloc wiring + download snack bar
+│       └── image_generator_view.dart # Size fields, common sizes, preview
 └── cron/
     ├── bloc/                      # CronBloc, CronEvent, CronState
     │   ├── cron_bloc.dart
@@ -303,7 +337,7 @@ VALIDACAO_130.md                   # Checklist for the 1.3.0 demo video App Revi
 
 test/
 ├── widget_test.dart               # App shell (panel, rail, bottom bar + Mais), every page, export, phone-sized layout
-├── shared/                        # Export formats + ListExportRepository; fake_save_dialog.dart helper
+├── shared/                        # Export formats, ListExportRepository, PNG encoder; fake_save_dialog.dart + png_decoder.dart helpers
 ├── uuid/                          # UuidRepository + UuidBloc tests
 ├── cpf/                           # CpfRepository (check digits, states, batches) + CpfBloc (incl. export) tests
 ├── cnpj/                          # CnpjRepository (numeric + alphanumeric) + CnpjBloc (incl. export) tests
@@ -311,7 +345,8 @@ test/
 ├── lorem/                         # LoremRepository (unit/amount rules) + LoremBloc tests
 ├── password/                      # Generation, options, persisted history + PasswordBloc tests
 ├── cron/                          # Parser + next runs, descriptions, random, CronBloc tests
-└── qr_code/                       # Encoding, level limits, samples, PNG output, QrCodeBloc (incl. download) tests
+├── qr_code/                       # Encoding, level limits, samples, PNG output, QrCodeBloc (incl. download) tests
+└── image_generator/               # Recipe (deterministic, colorful, resolution-free), previews, ImageGeneratorBloc (incl. download) tests
 
 android/  ios/  linux/  macos/  windows/    # platform runners
 ```
@@ -499,7 +534,7 @@ The workflow reads these repository secrets:
 - `cupertino_icons` — icons.
 - `shared_preferences` — keeps the recent passwords across restarts.
 - `qr` — QR Code encoding (pure Dart).
-- `file_picker` — the "save as" dialog used to download QR Codes as PNG and to export CPF/CNPJ lists.
+- `file_picker` — the "save as" dialog used to download QR Codes and images as PNG and to export CPF/CNPJ lists.
 - `bloc_test` (dev) — Bloc unit testing.
 - `shared_preferences_platform_interface` (dev) — in-memory preferences for
   tests (`InMemorySharedPreferencesAsync`), since the plugin is not registered

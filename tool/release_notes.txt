@@ -9,6 +9,7 @@ Massa de Teste gera e valida números de CPF e CNPJ fictícios para quem desenvo
 Funciona offline, sem cadastro e sem coletar dados.
 Novo aviso nas telas de CPF e CNPJ: os números são sorteados pelo algoritmo público dos dígitos verificadores, só para testar software. Não são documentos, não vêm de nenhum cadastro e não devem ser usados para identificar ninguém.
 A seção do menu que reunia CPF, CNPJ e Validar agora se chama "CPF e CNPJ".
+Novo: gerador de imagens de teste. Escolha a largura e a altura em pixels (1024×768 por padrão, ou um tamanho comum) e toque em Gerar: um algoritmo desenha uma imagem colorida, no estilo psicodélico, que nunca se repete. Serve para testar upload, layout e placeholders, e o Download salva em PNG no tamanho escolhido.
 Correção: no iPhone, tocar fora de uma caixa de texto agora fecha o teclado, e a barra de navegação continua visível acima dele. Antes o teclado cobria a barra e, no Validar, não dava para sair da tela.
 </pt-BR>
 <en-US>
@@ -23,4 +24,5 @@ To try it: open "Validar" and tap "Ver exemplo". On "CNPJ", choose "Alfanuméric
 Build 4 (guideline 5): the CPF and CNPJ screens now show a permanent notice that the numbers are random, computed with the public check-digit algorithm, only for software testing; they are not documents, come from no registry, and must not be used to identify anyone. The app is now offered only in Brazil.
 This version also fixes an iOS bug found while recording the demo video App Review asked for: on screens with a text field, most visibly "Validar", the keyboard covered the tab bar and could not be dismissed, so the screen could not be left. Tapping outside a text field now closes the keyboard, and the tab bar stays visible above it.
 Version 1.3.1 (5), guidelines 5 and 1.1.6: the navigation section that groups CPF, CNPJ and Validar was renamed from "Documentos" (documents) to "CPF e CNPJ", because the app produces numbers for software tests, not documents. The first screenshot no longer says "CPF válido" (valid CPF).
+Also in this build, under "Outras ferramentas": a test image generator for developers who need sample images to test uploads and layouts. The user sets width and height in pixels (1024×768 by default), the app draws a colorful abstract picture with its own algorithm, and Download saves it as a PNG of that size.
 </en-US>

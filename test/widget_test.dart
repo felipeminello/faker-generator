@@ -373,6 +373,95 @@ void main() {
     );
   });
 
+  testWidgets('generates a psychedelic image at 1024×768 by default', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'Imagem');
+
+    expect(find.text('Nenhuma imagem ainda'), findsOneWidget);
+    expect(_fieldText(tester, 'Largura (px)'), '1024');
+    expect(_fieldText(tester, 'Altura (px)'), '768');
+
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhuma imagem ainda'), findsNothing);
+    expect(
+      find.bySemanticsLabel('Imagem psicodélica de 1024×768 pixels'),
+      findsOneWidget,
+    );
+    expect(find.text('Gerar outra'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhuma imagem ainda'), findsOneWidget);
+  });
+
+  testWidgets('sets the image size from the fields and the presets', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'Imagem');
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Largura (px)'),
+      '9999',
+    );
+    await tester.pumpAndSettle();
+
+    expect(_fieldText(tester, 'Largura (px)'), '4096', reason: 'clamped');
+
+    await _tapVisible(tester, find.text('1920×1080'));
+    await tester.pumpAndSettle();
+
+    expect(_fieldText(tester, 'Largura (px)'), '1920');
+    expect(_fieldText(tester, 'Altura (px)'), '1080');
+
+    await _tapVisible(tester, find.text('Inverter'));
+    await tester.pumpAndSettle();
+
+    expect(_fieldText(tester, 'Largura (px)'), '1080');
+    expect(_fieldText(tester, 'Altura (px)'), '1920');
+    expect(find.text('1080 × 1920 pixels · PNG'), findsOneWidget);
+  });
+
+  testWidgets('downloads the image as a PNG at the chosen size', (
+    tester,
+  ) async {
+    final dialog = _FakeFilePicker();
+    FilePickerPlatform.instance = dialog;
+    await tester.pumpWidget(const MyApp());
+    await _open(tester, 'Imagem');
+
+    final download = find.widgetWithText(OutlinedButton, 'Download');
+    expect(tester.widget<OutlinedButton>(download).onPressed, isNull);
+
+    await _tapVisible(tester, find.text('800×600'));
+    await tester.tap(find.text('Gerar'));
+    await tester.pumpAndSettle();
+    await tester.tap(download);
+    // The PNG is drawn in another isolate, which only runs in real time;
+    // its answer is then delivered in the test's fake time, by a pump.
+    for (var i = 0; i < 100 && dialog.saved.isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(dialog.saved.single.fileName, 'imagem-800x600.png');
+    expect(dialog.saved.single.mimeType, 'image/png');
+    expect(
+      find.text(
+        'Imagem salva em ${Uri.file('/tmp/imagem-800x600.png').toFilePath()}',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('navigates between generator features', (tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -641,6 +730,7 @@ void main() {
         'Cron',
         'Lorem',
         'QR Code',
+        'Imagem',
       ]) {
         await _openOnPhone(tester, tool);
         final field = find.byType(TextField).first;
@@ -664,6 +754,7 @@ void main() {
         'Lorem',
         'Senha',
         'QR Code',
+        'Imagem',
       ]) {
         await _openOnPhone(tester, tool);
         await tester.tap(
@@ -747,6 +838,19 @@ void main() {
     });
   });
 }
+
+/// Scrolls [finder] into view, then taps it.
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+}
+
+/// The text in the [TextField] labelled [label].
+String _fieldText(WidgetTester tester, String label) => tester
+    .widget<TextField>(find.widgetWithText(TextField, label))
+    .controller!
+    .text;
 
 /// Opens [tool] from the side navigation of a wide window. The rail scrolls
 /// when the window is too short for every tool.

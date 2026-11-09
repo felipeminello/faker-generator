@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_generator/qr_code/data/qr_code_level.dart';
 import 'package:fake_generator/qr_code/data/qr_code_png.dart';
 import 'package:fake_generator/qr_code/data/qr_code_repository.dart';
+
+import '../shared/png_decoder.dart';
 
 void main() {
   group('encodeQrCodePng', () {
@@ -27,7 +28,7 @@ void main() {
     });
 
     test('draws the modules black on white, quiet zone included', () {
-      final pixels = _decode(encodeQrCodePng(qrCode), 512);
+      final pixels = decodePng(encodeQrCodePng(qrCode)).rows;
       // 21 modules + 8 of quiet zone: ~17.66 px per module.
       const module = 512 / 29;
       int at(int row, int column) =>
@@ -44,28 +45,9 @@ void main() {
     });
 
     test('uses only pure black and pure white', () {
-      final pixels = _decode(encodeQrCodePng(qrCode, size: 100), 100);
+      final pixels = decodePng(encodeQrCodePng(qrCode, size: 100)).rows;
 
       expect(pixels.expand((row) => row).toSet(), {0, 255});
     });
   });
-}
-
-/// The pixel rows of an unfiltered grayscale PNG with a single IDAT chunk,
-/// as [encodeQrCodePng] writes it.
-List<List<int>> _decode(Uint8List png, int size) {
-  final data = ByteData.sublistView(png);
-  var offset = 8;
-  while (true) {
-    final length = data.getUint32(offset);
-    final type = String.fromCharCodes(png.sublist(offset + 4, offset + 8));
-    if (type == 'IDAT') {
-      final raw = zlib.decode(png.sublist(offset + 8, offset + 8 + length));
-      return [
-        for (var y = 0; y < size; y++)
-          raw.sublist(y * (size + 1) + 1, (y + 1) * (size + 1)),
-      ];
-    }
-    offset += 12 + length;
-  }
 }

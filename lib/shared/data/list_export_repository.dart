@@ -6,8 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'export_format.dart';
 import 'save_file.dart';
 
-/// Where exporting a list stands. The page shows a message when it leaves
-/// [saving].
+/// Where saving a file (an exported list, a generated image) stands. The
+/// page shows a message when it leaves [saving].
 enum ExportStatus { idle, saving, saved, cancelled, failed }
 
 /// Saves generated lists as CSV, JSON or TXT files through the platform's

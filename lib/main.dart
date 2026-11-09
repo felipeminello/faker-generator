@@ -8,6 +8,9 @@ import 'cpf/data/cpf_repository.dart';
 import 'cron/bloc/cron_bloc.dart';
 import 'cron/data/cron_repository.dart';
 import 'home/presentation/home_page.dart';
+import 'image_generator/bloc/image_generator_bloc.dart';
+import 'image_generator/data/image_download_repository.dart';
+import 'image_generator/data/image_generator_repository.dart';
 import 'lorem/bloc/lorem_bloc.dart';
 import 'lorem/data/lorem_repository.dart';
 import 'password/bloc/password_bloc.dart';
@@ -42,6 +45,8 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => CronRepository()),
         RepositoryProvider(create: (_) => QrCodeRepository()),
         RepositoryProvider(create: (_) => QrCodeDownloadRepository()),
+        RepositoryProvider(create: (_) => ImageGeneratorRepository()),
+        RepositoryProvider(create: (_) => ImageDownloadRepository()),
         RepositoryProvider(create: (_) => ListExportRepository()),
         RepositoryProvider(create: (_) => const ValidatorRepository()),
       ],
@@ -82,6 +87,12 @@ class MyApp extends StatelessWidget {
             create: (context) => QrCodeBloc(
               context.read<QrCodeRepository>(),
               context.read<QrCodeDownloadRepository>(),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => ImageGeneratorBloc(
+              context.read<ImageGeneratorRepository>(),
+              context.read<ImageDownloadRepository>(),
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../cnpj/presentation/cnpj_page.dart';
 import '../../cpf/presentation/cpf_page.dart';
 import '../../cron/presentation/cron_page.dart';
+import '../../image_generator/presentation/image_generator_page.dart';
 import '../../lorem/presentation/lorem_page.dart';
 import '../../password/presentation/password_page.dart';
 import '../../qr_code/presentation/qr_code_page.dart';
@@ -88,6 +89,12 @@ class _HomePageState extends State<HomePage> {
         selectedIcon: Icons.qr_code_2,
         label: 'QR Code',
         page: QrCodePage(),
+      ),
+      _Tool(
+        icon: Icons.palette_outlined,
+        selectedIcon: Icons.palette,
+        label: 'Imagem',
+        page: ImageGeneratorPage(),
       ),
     ]),
   ];
